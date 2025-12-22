@@ -1,11 +1,10 @@
 package xyz.marsavic.gfxlab;
 
-import xyz.marsavic.geometry.Vector;
 import xyz.marsavic.elements.Immutable;
+import xyz.marsavic.geometry.Vector;
 import xyz.marsavic.utils.Hash;
 import xyz.marsavic.utils.Hashable;
 import xyz.marsavic.utils.Numeric;
-import xyz.marsavic.utils.Utils;
 
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.DoubleUnaryOperator;

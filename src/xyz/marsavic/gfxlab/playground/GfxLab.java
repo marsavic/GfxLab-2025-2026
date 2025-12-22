@@ -25,9 +25,10 @@ public class GfxLab {
 	
 	
 	static F1<Rr<Matrix<Integer>>, Integer> setup2D() {
-		var size = Vec3.xyz(640.0, 640.0, 640.0);
+		var size = Vec3.xyz(40.0, 640.0, 640.0);
 		
 		var aggregator = new AggregatorOneAhead(
+//		var aggregator = new AggregatorFrameLast(
 				new TransformedColorFunction(
 //						new OkLab()               , new TransformationsFromSize.ToUnitBox  (size)
 //						new ColorFunctionExample(), new TransformationsFromSize.ToUnitBox  (size)
@@ -35,13 +36,12 @@ public class GfxLab {
 //						new ScanLine()            , new TransformationsFromSize.ToIdentity (size)
 //						new GammaTest()           , new TransformationsFromSize.ToIdentity (size)
 //						new Spirals()             , new TransformationsFromSize.ToGeometric(size)
-						new Blobs(5, 0.1, 0.2)    , new TransformationsFromSize.ToGeometric(size)
-//						new Wavy()                , new TransformationsFromSize.ToGeometric(size)
+//						new Blobs(5, 0.1, 0.2)    , new TransformationsFromSize.ToGeometric(size)
+						new RayTracingTest()      , new TransformationsFromSize.ToGeometric(size)
 				),
 				size,
 				new Hash(0x34EDE7F200EA9AD7L)
-		);
-		
+		);		
 		
 		return new ToneMapping3(
 				aggregator::rFrame,
