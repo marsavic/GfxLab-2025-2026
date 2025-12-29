@@ -12,7 +12,7 @@ public class Resources {
 	
 	private static Image[] iconsApplication = null;
 	
-	public static final String stylesheetURL = xyz.marsavic.objectinstruments.resources.Resources.stylesheetURL;
+	public static final String stylesheetURL = Objects.requireNonNull(Resources.class.getResource("mars-dark2.css")).toExternalForm();
 	
 	
 	public static Image[] iconsApplication() {

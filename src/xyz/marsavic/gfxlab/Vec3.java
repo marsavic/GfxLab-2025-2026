@@ -1,7 +1,7 @@
 package xyz.marsavic.gfxlab;
 
-import xyz.marsavic.elements.Immutable;
 import xyz.marsavic.geometry.Vector;
+import xyz.marsavic.reactions.elements.Immutable;
 import xyz.marsavic.utils.Hash;
 import xyz.marsavic.utils.Hashable;
 import xyz.marsavic.utils.Numeric;
@@ -146,6 +146,25 @@ public class Vec3 implements Hashable {
 	}
 	
 	
+	public Vec3 mulAdd(Vec3 m, Vec3 a) {
+		return xyz(x() * m.x() + a.x(), y() * m.y() + a.y(), z() * m.z() + a.z());
+	}
+
+	
+	public Vec3 mulAdd(double m, Vec3 a) {
+		return xyz(x() * m + a.x(), y() * m + a.y(), z() * m + a.z());
+	}
+
+	
+	public Vec3 fma(Vec3 m, Vec3 a) {
+		return xyz(Math.fma(x(), m.x(), a.x()), Math.fma(y(), m.y(), a.y()), Math.fma(z(), m.z(), a.z()));
+	}
+	
+	public Vec3 fma(double m, Vec3 a) {
+		return xyz(Math.fma(x(), m, a.x()), Math.fma(y(), m, a.y()), Math.fma(z(), m, a.z()));
+	}
+	
+	
 	public Vec3 div(double k) {
 		return xyz(x() / k, y() / k, z() / k);
 	}
@@ -155,6 +174,10 @@ public class Vec3 implements Hashable {
 		return xyz(x() / o.x(), y() / o.y(), z() / o.z());
 	}
 	
+	
+	public Vec3 reciprocal() {
+		return xyz(1.0 / x(), 1.0 / y(), 1.0 / z());
+	}
 	
 	
 	public double lengthSquared() {

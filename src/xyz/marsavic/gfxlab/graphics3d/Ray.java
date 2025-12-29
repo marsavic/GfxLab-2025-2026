@@ -1,6 +1,6 @@
 package xyz.marsavic.gfxlab.graphics3d;
 
-import xyz.marsavic.gfxlab.Affine;
+import xyz.marsavic.gfxlab.Affine3;
 import xyz.marsavic.gfxlab.Vec3;
 import xyz.marsavic.utils.Hash;
 import xyz.marsavic.utils.Hashable;
@@ -33,7 +33,7 @@ public record Ray(Vec3 p, Vec3 d) implements Hashable {
 		return Ray.pd(p(), d().normalized_());
 	}
 
-	public Ray transformed(Affine t) {
+	public Ray transformed(Affine3 t) {
 		return new Ray(t.at(p), t.applyWithoutTranslationTo(d));
 	}
 	

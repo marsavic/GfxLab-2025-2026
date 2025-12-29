@@ -2,7 +2,7 @@ package xyz.marsavic.gfxlab.playground.colorfunctions;
 
 import xyz.marsavic.geometry.Vector;
 import xyz.marsavic.gfxlab.Color;
-import xyz.marsavic.gfxlab.ColorFunctionT;
+import xyz.marsavic.gfxlab.ColorFunction3;
 import xyz.marsavic.gfxlab.graphics3d.Hit;
 import xyz.marsavic.gfxlab.graphics3d.Ray;
 import xyz.marsavic.gfxlab.solids.Ball;
@@ -11,7 +11,7 @@ import xyz.marsavic.gfxlab.solids.HalfSpace;
 import static xyz.marsavic.gfxlab.Vec3.*;
 
 
-public class RayTracingTest implements ColorFunctionT {
+public class RayTracingTest implements ColorFunction3 {
 	
 	Ball ball = Ball.cr(xyz(0, 0, 3), 2);
 	
