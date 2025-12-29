@@ -2,6 +2,8 @@ package xyz.marsavic.gfxlab.playground;
 
 import xyz.marsavic.gfxlab.*;
 import xyz.marsavic.gfxlab.aggregation.*;
+import xyz.marsavic.gfxlab.graphics3d.raytracing.RayTracerSimple;
+import xyz.marsavic.gfxlab.graphics3d.scenes.SceneTest;
 import xyz.marsavic.gfxlab.playground.colorfunctions.*;
 import xyz.marsavic.gfxlab.tonemapping.ColorTransform;
 import xyz.marsavic.gfxlab.tonemapping.ToneMapping2;
@@ -22,6 +24,10 @@ public class GfxLab {
 	
 
 	private static ElementF<Animation> setup2D() {
+		
+//		new Blobs(5, 0.1, 0.2, new Hash(0x3B2622FB4358FC00L));
+//		e(Blobs.class, e(0.1), e(0.2), e(Hash.class, e(0x3B2622FB4358FC00L)));
+		
 		return
 				e(ToneMapping3.class,
 						new EAggregator(
@@ -35,8 +41,14 @@ public class GfxLab {
 //	        					e(ScanLine.class)                      , e(TransformationFromSize.ToIdentity_.class),
 //	        					e(GammaTest.class)                     , e(TransformationFromSize.ToIdentity_.class),
 //	        					e(Spirals.class, e(7), e(0.25), e(0.4)), e(TransformationFromSize.ToGeometricT0_.class),
-	        					e(Blobs.class, e(5), e(0.1), e(0.2), e(Hash.class, e(0xB182847F9F621EB1L))), e(TransformationFromSize.ToGeometricT0_.class),
+//	        					e(Blobs.class, e(5), e(0.1), e(0.2), e(Hash.class, e(0xB182847F9F621EB1L))), e(TransformationFromSize.ToGeometricT0_.class),
 //	        					e(RayTracingTest.class)                , e(TransformationFromSize.ToGeometricT0_.class),
+								
+								e(RayTracerSimple.class,
+									e(SceneTest.class, e(0.0), e(15), e(4))
+								),
+								
+								e(TransformationFromSize.ToGeometricT0_.class),
 								
 								e(Vec3.xyz(640, 640, 640)), // (nFrames, width, height)
 

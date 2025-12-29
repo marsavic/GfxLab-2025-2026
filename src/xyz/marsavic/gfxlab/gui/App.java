@@ -25,7 +25,6 @@ import xyz.marsavic.reactions.elements.Element;
 public class App extends Application {
 
 	static {
-		System.out.println("Starting");
 		System.setProperty("prism.forceGPU=true", "true");
 	}
 	
