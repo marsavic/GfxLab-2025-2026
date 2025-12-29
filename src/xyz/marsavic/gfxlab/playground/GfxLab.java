@@ -25,9 +25,9 @@ public class GfxLab {
 		return
 				e(ToneMapping3.class,
 						new EAggregator(
-								e(AggregatorFrameLast::new),
+//								e(AggregatorFrameLast::new),
 //								e(AggregatorOnDemand::new),
-//								e(AggregatorOneAhead::new),
+								e(AggregatorOneAhead::new),
 								
 //	        					e(OkLab.class, e(0.0))                 , e(TransformationFromSize.ToUnitBox_.class),
 //	        					e(ColorFunction3Example.class)         , e(TransformationFromSize.ToUnitBox_.class),
@@ -35,8 +35,8 @@ public class GfxLab {
 //	        					e(ScanLine.class)                      , e(TransformationFromSize.ToIdentity_.class),
 //	        					e(GammaTest.class)                     , e(TransformationFromSize.ToIdentity_.class),
 //	        					e(Spirals.class, e(7), e(0.25), e(0.4)), e(TransformationFromSize.ToGeometricT0_.class),
-//	        					e(Blobs.class, e(5), e(0.1), e(0.2), e(Hash.class, e(0xB182847F9F621EB1L))), e(TransformationFromSize.ToGeometricT0_.class),
-	        					e(RayTracingTest.class)                , e(TransformationFromSize.ToGeometricT0_.class),
+	        					e(Blobs.class, e(5), e(0.1), e(0.2), e(Hash.class, e(0xB182847F9F621EB1L))), e(TransformationFromSize.ToGeometricT0_.class),
+//	        					e(RayTracingTest.class)                , e(TransformationFromSize.ToGeometricT0_.class),
 								
 								e(Vec3.xyz(640, 640, 640)), // (nFrames, width, height)
 
