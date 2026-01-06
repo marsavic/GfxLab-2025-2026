@@ -31,11 +31,12 @@ public interface Array2<E> extends FO_II<E> {
 	}
 
 	
-	static Vector assertEqualSizes(Array2<?> a, Array2<?> b) {
-		if (!b.size().equals(a.size())) {
-			throw new IllegalArgumentException("Array2 sizes are not equal.");
+	static Vector assertEqualSizes(Array2<?> a, Array2<?>... o) {
+		Vector size = a.size();
+		for (Array2<?> b : o) {
+			assertSize(b, size);
 		}
-		return a.size();
+		return size;
 	}
 	
 }

@@ -1,13 +1,13 @@
 package xyz.marsavic.gfxlab;
 
+import xyz.marsavic.functions.FD_D;
+import xyz.marsavic.functions.FD_DD;
 import xyz.marsavic.geometry.Vector;
 import xyz.marsavic.reactions.elements.Immutable;
 import xyz.marsavic.utils.Hash;
 import xyz.marsavic.utils.Hashable;
 import xyz.marsavic.utils.Numeric;
 
-import java.util.function.DoubleBinaryOperator;
-import java.util.function.DoubleUnaryOperator;
 import java.util.random.RandomGenerator;
 
 @Immutable
@@ -370,12 +370,12 @@ public class Vec3 implements Hashable {
 	}
 	
 	
-	public Vec3 f(DoubleUnaryOperator f) {
+	public Vec3 f(FD_D f) {
 		return Vec3.f(f, this);
 	}
 	
 	
-	public Vec3 f(DoubleBinaryOperator f, Vec3 v) {
+	public Vec3 f(FD_DD f, Vec3 v) {
 		return Vec3.f(f, this, v);
 	}
 	
@@ -425,20 +425,20 @@ public class Vec3 implements Hashable {
 	}
 	
 	
-	public static Vec3 f(DoubleUnaryOperator f, Vec3 u) {
+	public static Vec3 f(FD_D f, Vec3 u) {
 		return Vec3.xyz(
-				f.applyAsDouble(u.x()),
-				f.applyAsDouble(u.y()),
-				f.applyAsDouble(u.z())
+				f.at(u.x()),
+				f.at(u.y()),
+				f.at(u.z())
 		);
 	}
 	
 	
-	public static Vec3 f(DoubleBinaryOperator f, Vec3 u, Vec3 v) {
+	public static Vec3 f(FD_DD f, Vec3 u, Vec3 v) {
 		return Vec3.xyz(
-				f.applyAsDouble(u.x(), v.x()),
-				f.applyAsDouble(u.y(), v.y()),
-				f.applyAsDouble(u.z(), v.z())
+				f.at(u.x(), v.x()),
+				f.at(u.y(), v.y()),
+				f.at(u.z(), v.z())
 		);
 	}
 	

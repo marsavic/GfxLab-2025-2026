@@ -13,16 +13,16 @@ public interface Hit {
 	/** The normal at the hit point. */
 	Vec3 n();
 	
+	/** Surface material at the hit point. */
+	Material material();
+	
+	/** 2D coordinates in the internal coordinate system of the surface. */
+	Vector uv();
+	
 	/** The normalized normal at the point of the hit */
 	default Vec3 n_() {
 		return n().normalized_();
 	}
-	
-	default Vector uv() {
-		return Vector.ZERO;
-	}
-	
-	Material material();
 	
 	
 	default Hit withN(Vec3 n) {
@@ -30,6 +30,7 @@ public interface Hit {
 			@Override public double   t       () { return Hit.this.t(); }
 			@Override public Vec3     n       () { return n; }
 			@Override public Material material() { return Hit.this.material(); }
+			@Override public Vector   uv      () { return Hit.this.uv(); }
 		};
 	}
 	
@@ -38,6 +39,7 @@ public interface Hit {
 			@Override public double   t       () { return Hit.this.t (); }
 			@Override public Vec3     n       () { return Hit.this.n ().inverse(); }
 			@Override public Vec3     n_      () { return Hit.this.n_().inverse(); }
+			@Override public Vector   uv      () { return Hit.this.uv(); }
 			@Override public Material material() { return Hit.this.material(); }
 		};
 	}
@@ -73,6 +75,7 @@ public interface Hit {
 		
 		@Override public double   t       () { return t; }
 		@Override public Vec3     n       () { return n; }
+		@Override public Vector   uv      () { return Vector.ZERO; }
 		@Override public Material material() { return Material.BLACK; }
 		
 		

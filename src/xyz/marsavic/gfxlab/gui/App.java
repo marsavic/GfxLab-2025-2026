@@ -3,14 +3,16 @@ package xyz.marsavic.gfxlab.gui;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
+import javafx.scene.layout.VBox;
+import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 import xyz.marsavic.functions.A0;
 import xyz.marsavic.functions.A1;
-import xyz.marsavic.geometry.Vector;
 import xyz.marsavic.gfxlab.ElementAnimationSink;
 import xyz.marsavic.graph.Graph;
 import xyz.marsavic.graph.Vertex;
@@ -26,66 +28,58 @@ public class App extends Application {
 
 	static {
 		System.setProperty("prism.forceGPU=true", "true");
+//		System.setProperty("javafx.animation.fullspeed", "true");
+//		System.setProperty("javafx.animation.pulse", "60");
+//		System.setProperty("prism.vsync", "true");
+//		System.setProperty("quantum.multithreaded", "false");
 	}
 	
 	Stage primaryStage;
+	Pane root;
 	Graph graph;
-	Region sidePanel;
+	Region info;
 	TextArea textArea;
 	
 	
 	
 	AnimationTimer animationTimer = new AnimationTimer() {
-//		int i = 0;
+		int i = 0;
 		@Override
 		public void handle(long now) {
-//			textArea.setText(Profiling.infoTextSystem() + Profiling.infoTextProfilers());
-/*
+			textArea.setText(Profiling.infoTextSystem() + Profiling.infoTextProfilers());
 			i++;
 			if ((i % 20) == 0) {				
 				primaryStage.getScene().getStylesheets().setAll("file:resources/xyz/marsavic/gfxlab/resources/mars-dark2.css");
 			}
-*/
 		}
 	};
 	
 	
 	
-	Vector addElements(Graph graph, Element e, Vector p) {
+	void addElements(Graph graph, Element e) {
 		Vertex vertex = graph.createVertex(e);
 		
-		Vector s = p; 
 		for (VertexInputJack inputJack : vertex.inputJacks()) {
 			Element.Input<?> input = inputJack.input;
 			Element.Output<?> output = input.output();
 			Element eChild = output.element();
-			s = addElements(graph, eChild, Vector.xy(p.x() - 220, s.y()));
-			graph.createConnection(input, output);
+			addElements(graph, eChild);
+			graph.createConnection(output, input);
 		}
-
-		vertex.region().setLayoutX(p.x());
-		vertex.region().setLayoutY(p.y());
-		
-		return Vector.xy(p.x(), s.y() + 60);
 	}
 	
 	
 	void initGraph(Graph graph) {
 		var sink = new ElementAnimationSink(GfxLab.setup());		
-/*
-		var sink = new ElementA1<>(
-				e(Double::sum,
-						e(Math::min, 
-							e(0.23), e(0.45)
-						),
-						e(Math::max, 
-							e(0.23), e(0.45)
-						)
-				)
-		);
-*/
 		
-		addElements(graph, sink, Vector.ZERO);
+		addElements(graph, sink);
+		
+		// Adding onResized for animation sinks 
+		for (Vertex v : graph.vertices) {
+			if (v instanceof Vertex_AnimationSink vas) {
+				vas.onResized().add(onResized);
+			}
+		}
 	}
 	
 	
@@ -98,21 +92,24 @@ public class App extends Application {
 		graph = new Graph();
 		initGraph(graph);
 		
-//		textArea = new TextArea();
-//		textArea.setEditable(false);
-//		sidePanel = new VBox(
-//				textArea
-//		);
-//		textArea.setPrefHeight(500);
-//		sidePanel.setMinWidth(700);
+		textArea = new TextArea();
+		textArea.setEditable(false);
+		info = textArea;
 		
-		
-		Pane root = new HBox(
+		root = new Pane(
 				graph
-//				rightPane
 		);
-		Scene scene = new Scene(root, 1800, 1000);
-		HBox.setHgrow(graph, Priority.ALWAYS);
+		
+		graph   .prefWidthProperty ().bind(root.widthProperty ());
+		graph   .prefHeightProperty().bind(root.heightProperty());
+//		textArea.prefWidthProperty ().bind(root.widthProperty ());
+//		textArea.prefHeightProperty().bind(root.heightProperty());
+		textArea.setPrefWidth(800);
+		textArea.setPrefHeight(400);
+		
+		textArea.setMouseTransparent(true);
+		
+		Scene scene = new Scene(root, 1840, 1000);
 		
 		
 		scene.getStylesheets().setAll(Resources.stylesheetURL);
@@ -123,8 +120,11 @@ public class App extends Application {
 		primaryStage.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
 			A0 action = switch (event.getCode()) {
 				case ESCAPE -> Platform::exit;
-				case F11 -> () -> Platform.runLater(() -> primaryStage.setFullScreen(!primaryStage.isFullScreen()));
-				case F1 -> () -> Platform.runLater(() -> graph.layItOut());
+				case F1  -> this::autoPosition;
+				case F2  -> () -> graph.jiggle();
+				case F3  -> () -> graph.layItOutFX();
+				case F4  -> this::toggleInfo;
+				case F11 -> () -> primaryStage.setFullScreen(!primaryStage.isFullScreen());
 				default -> A0.NOOP;
 			};
 			
@@ -134,13 +134,7 @@ public class App extends Application {
 		primaryStage.setScene(scene);
 		primaryStage.show();
 		
-		Platform.runLater(() -> graph.layItOut());
-		
-		for (Vertex v : graph.vertices) {
-			if (v instanceof Vertex_AnimationSink vas) {
-				vas.onResized().add(onResized);
-			}
-		}
+//		Platform.runLater(this::autoPosition);
 		
 		
 //		System.err.println("Using animation timer for CSS auto reload. Remember to remove");
@@ -148,10 +142,21 @@ public class App extends Application {
 	}
 	
 	
+	private void toggleInfo() {
+		UtilsFX.toggle(root, info);
+	}
+	
+	
+	private void autoPosition() {
+		graph.layItOutFX();
+		graph.jiggle();
+	}
+	
+	
 	private final A1<Vertex_AnimationSink.EventResized> onResized = this::onResized;
 	
 	private void onResized(Vertex_AnimationSink.EventResized eventResized) {
-		Platform.runLater(() -> graph.layItOut());
+		Platform.runLater(this::autoPosition);
 	}
 	
 	

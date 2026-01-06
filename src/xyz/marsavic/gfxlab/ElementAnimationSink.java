@@ -11,8 +11,6 @@ public class ElementAnimationSink extends Element {
 	public ElementAnimationSink(HasOutput<? extends Animation> p0) {
 		super("Animation sink");
 		in0 = new Input<>(p0);
-		
-		buildItUpFirstTime();
 	}
 
 }

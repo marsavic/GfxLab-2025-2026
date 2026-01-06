@@ -49,26 +49,33 @@ public final class MatrixInts implements Matrix<Integer> {
 	}
 	
 	
+	@Override
 	public void copyFrom(Array2<Integer> source) {
+		if (source instanceof MatrixInts miSource) {
+			copyFrom(miSource);
+			return;
+		}
 		Array2.assertEqualSizes(this, source);
 		
-		if (source instanceof MatrixInts m) {
-			System.arraycopy(m.array(), 0, data, 0, m.array().length);
+		UtilsGL.parallel.parallel(height, y -> {
+			int o = y * width;
+			for (int x = 0; x < width; x++) {
+				data[o++] = source.at(x, y);
+			}
+		});
+	}
+
+	
+	public void copyFrom(MatrixInts source) {
+		Array2.assertEqualSizes(this, source);
+		System.arraycopy(source.data, 0, data, 0, source.data.length);
 /*
-			// Optimize: Test if doing it in parallel is faster.
-			UtilsGL.parallel(height, y -> {
-				int o = y * width;
-				System.arraycopy(m.array(), o, data, o, width);
-			});
+		// Optimize: Test if doing it in parallel is faster.
+		UtilsGL.parallel(height, y -> {
+			int o = y * width;
+			System.arraycopy(source.array(), o, data, o, width);
+		});
 */
-		} else {
-			UtilsGL.parallel.parallel(height, y -> {
-				int o = y * width;
-				for (int x = 0; x < width; x++) {
-					data[o++] = source.at(x, y);
-				}
-			});
-		}
 	}
 	
 	

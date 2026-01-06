@@ -1,5 +1,6 @@
 package xyz.marsavic.graph;
 
+import javafx.application.Platform;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -14,12 +15,15 @@ import xyz.marsavic.javafx.UtilsFX;
 import xyz.marsavic.reactions.elements.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class Graph extends Pane {
 	// ---
 	private final Map<Element, Vertex> map_element_vertex_ = new HashMap<>();
+	private final List<Element> elements_ = new ArrayList<>();
 	private final List<Edge> edges_ = new ArrayList<>();
+	private final Map<Element, List<Edge>> map_inputEdges_ = new HashMap<>(); 
 	private final Map<Element.Input <?>, VertexInputJack > map_input_jack_  = new HashMap<>();
 	private final Map<Element.Output<?>, VertexOutputJack> map_output_jack_ = new HashMap<>();
 	
@@ -29,7 +33,9 @@ public class Graph extends Pane {
 	// ---
 	
 	public final Map<Element, Vertex> map_element_vertex = Collections.unmodifiableMap(map_element_vertex_);
+	public final List<Element> elements = Collections.unmodifiableList(elements_);
 	public final List<Edge> edges = Collections.unmodifiableList(edges_);
+	public final Map<Element, List<Edge>> map_inputEdges = Collections.unmodifiableMap(map_inputEdges_);
 	public final Map<Element.Input <?>, VertexInputJack > map_input_jack  = Collections.unmodifiableMap(map_input_jack_ );
 	public final Map<Element.Output<?>, VertexOutputJack> map_output_jack = Collections.unmodifiableMap(map_output_jack_);
 	
@@ -63,14 +69,14 @@ public class Graph extends Pane {
 
 	
 	private Vertex createVertexByType(Element e) {
-		if (e instanceof ElementAnimationSink e_) return new Vertex_AnimationSink(e_);
-		if (e instanceof ElementDouble        e_) return new Vertex_Double       (e_);
-		if (e instanceof ElementInteger       e_) return new Vertex_Integer      (e_);
-		if (e instanceof ElementLong          e_) return new Vertex_Long         (e_);
-		if (e instanceof ElementBoolean       e_) return new Vertex_Boolean      (e_);
-		if (e instanceof ElementF<?>          e_) return new Vertex_ElementF     (e_);
-		if (e instanceof ElementA1<?>         e_) return new Vertex_ElementA1    (e_);
-		if (e instanceof Element              e_) return new Vertex_Default      (e_);
+		if (e instanceof ElementAnimationSink   e_) return new Vertex_AnimationSink      (e_);
+		if (e instanceof ElementDouble          e_) return new Vertex_Double             (e_);
+		if (e instanceof ElementInteger         e_) return new Vertex_Integer            (e_);
+		if (e instanceof ElementLong            e_) return new Vertex_Long               (e_);
+		if (e instanceof ElementBoolean         e_) return new Vertex_Boolean            (e_);
+		if (e instanceof ElementSingleOutput<?> e_) return new Vertex_ElementSingleOutput(e_);
+		if (e instanceof ElementA1<?>           e_) return new Vertex_ElementA1          (e_);
+		if (e instanceof Element                e_) return new Vertex_Default            (e_);
 		return null;
 	}
 	
@@ -83,8 +89,11 @@ public class Graph extends Pane {
 		
 		Vertex vertex = createVertexByType(e);
 		
+		elements_.add(e);
 		vertices_.add(vertex);
 		map_element_vertex_.put(e, vertex);
+		map_inputEdges_.put(e, new ArrayList<>());
+		
 		paneVertices.getChildren().add(vertex.region());
 
 		for (VertexInputJack vertexInputJack : vertex.inputJacks()) {
@@ -103,9 +112,10 @@ public class Graph extends Pane {
 
 
 
-	public void createConnection(Element.Input<?> input, Element.Output<?> output) {
+	public void createConnection(Element.Output<?> output, Element.Input<?> input) {
 		Edge e = new Edge(input, output);
 		edges_.add(e);
+		map_inputEdges.get(input.element()).add(e);
 		
 		VertexInputJack vertexInputJack = map_input_jack.get(input);
 		VertexOutputJack vertexOutputJack = map_output_jack.get(output);
@@ -115,8 +125,33 @@ public class Graph extends Pane {
 		paneConnections.getChildren().add(c);
 	}
 	
-
-	public void layItOut() {
+	
+	
+	private static Map<Element, Box> getVertexBoxesFX(Map<Element, Vertex> map_element_vertex) {
+		return
+				map_element_vertex.entrySet().stream().collect(Collectors.toMap(
+						Map.Entry::getKey,
+						entry -> UtilsFX.toBox(entry.getValue().region())
+				));
+	}
+	
+	
+	private static void setVertexPositionsFX(Map<Element, Vertex> map_element_vertex, Map<Element, Box> positions) {
+		positions.forEach((e, b) ->
+				UtilsFX.setLayoutP(map_element_vertex.get(e).region(), b.p())
+		);			
+	}
+	
+	
+	public void layItOutFX() {
+		Map<Element, Box> boxesBefore = getVertexBoxesFX(map_element_vertex);
+		Map<Element, Box> boxesAfter = new LayoutDFS(boxesBefore, map_inputEdges).result; // TODO Not FX, call as Task
+		setVertexPositionsFX(map_element_vertex, boxesAfter);
+		centerContentFX();
+	}
+	
+	
+	public void jiggle() {                                                                // TODO Do with jiggle same as with layItOut. Separate class, not touching FX. 
 		Map<Vertex, Vector> p = new HashMap<>();
 		
 		int i = 0;
@@ -125,7 +160,7 @@ public class Graph extends Pane {
 			vertices.forEach(v -> p.put(v, UtilsFX.toBox(v.region()).p()));
 			
 			double k = 1 + 8.0 / (i + 1);
-			jiggle(k);
+			jiggleOnce(k);
 			i++;
 			
 			double dMax = 0;
@@ -136,12 +171,12 @@ public class Graph extends Pane {
 			
 			if (dMax <= 0.01) break;
 		}
-
-		for (Vertex v: vertices) {
-			UtilsFX.setLayoutP(v.region(), UtilsFX.layoutP(v.region()).round());
-		}
 		
-		centerContent();
+		Platform.runLater(() -> {
+			// Align to pixels
+			centerContentFX();
+			alignVerticesToPixels();
+		});
 		
 /*
 		System.out.println("Jiggles: " + i);
@@ -157,7 +192,7 @@ public class Graph extends Pane {
 	}
 	
 	
-	private void jiggle(double magnitude) {
+	private void jiggleOnce(double magnitude) {
 		double dConnection = 40;
 		Vector margin = Vector.xy(20, 20);
 		
@@ -166,11 +201,6 @@ public class Graph extends Pane {
 		for (Edge edge : edges) {
 			Vertex ni = map_element_vertex.get(edge.input ().element());
 			Vertex no = map_element_vertex.get(edge.output().element());
-//			VertexInputJack ji = map_input_jack.get(edge.input ());
-//			VertexOutputJack jo = map_output_jack.get(edge.output());
-			
-//			Vector ci = box(ji).c();
-//			Vector co = box(jo).c();
 			
 			Box bi = UtilsFX.toBox(ni.region());
 			Box bo = UtilsFX.toBox(no.region());
@@ -187,8 +217,8 @@ public class Graph extends Pane {
 		for (Vertex v0 : vertices) {
 			for (Vertex v1 : vertices) {
 				if (v0 == v1) continue;
-				Box b0 = UtilsFX.toBox(v0.region()).extend(margin);
-				Box b1 = UtilsFX.toBox(v1.region()).extend(margin);
+				Box b0 = UtilsFX.toBox(v0.region()).grow(margin);
+				Box b1 = UtilsFX.toBox(v1.region()).grow(margin);
 				Vector d = b0.minOffsetToAvoidOverlap(b1).div(margin).mul(3);
 				forces.merge(v0, d, Vector::add);
 			}
@@ -211,7 +241,7 @@ public class Graph extends Pane {
 	}
 	
 	
-	public void centerContent() {
+	public void centerContentFX() {
         if (vertices.isEmpty()) return;
         
     	Box b = UtilsFX.layoutBox(vertices.getFirst().region());
@@ -261,16 +291,14 @@ public class Graph extends Pane {
 
 	
 
-//	public static Box box(Region region) {
-//		Point2D p = region.localToScene(0, 0);
-//		return
-//				Box.pd(
-//						Vector.xy(p.getX(), p.getY()),
-//						Vector.xy(region.getWidth  (), region.getHeight  ())
-//				);
-//	}
-//	
 	
+	private void alignVerticesToPixels() {
+		for (Vertex v : vertices) {
+			UtilsFX.setLayoutP(v.region(), UtilsFX.layoutP(v.region()).round());
+		}
+	}
+
+
 	public static void translate(Node n, Vector o) {
 		UtilsFX.setLayoutP(n, UtilsFX.layoutP(n).add(o));
 	}

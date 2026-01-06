@@ -20,7 +20,7 @@ public class Group implements Solid {
 	}
 	
 	
-	public static Group of(Collection<Solid> solids) {
+	public static Group of(Collection<? extends Solid> solids) {
 		return new Group(solids.toArray(Solid[]::new));
 	}
 	
@@ -44,4 +44,16 @@ public class Group implements Solid {
 	
 	
 	// TODO HitBetween
+	
+		
+	@Override
+	public boolean hitBetween(Ray ray, double afterTime, double beforeTime) {
+		for (Solid s : solids) {
+			if (s.firstHit(ray, afterTime).t() < beforeTime) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 }

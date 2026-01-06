@@ -3,14 +3,17 @@ package xyz.marsavic.gfxlab.aggregation;
 import xyz.marsavic.functions.A1;
 import xyz.marsavic.functions.F1;
 import xyz.marsavic.gfxlab.*;
-import xyz.marsavic.reactions.elements.ElementF;
+import xyz.marsavic.reactions.Event;
+import xyz.marsavic.reactions.elements.ElementSingleOutput;
 import xyz.marsavic.reactions.elements.HasOutput;
 import xyz.marsavic.reactions.values.EventInvalidated;
 import xyz.marsavic.resources.Rr;
 import xyz.marsavic.utils.Hash;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class EAggregator extends ElementF<F1<Rr<Matrix<Color>>, Integer>> {
+
+public class EAggregator extends ElementSingleOutput<F1<Rr<Matrix<Color>>, Integer>> {
 	
 	public final Input<Aggregator.F_Aggregator> inFAggregator;
 	public final Input<ColorFunction3> inColorFunction;
@@ -41,39 +44,32 @@ public class EAggregator extends ElementF<F1<Rr<Matrix<Color>>, Integer>> {
 		inRepeats = new Input<>("repeats", Boolean.class, outRepeats);
 		inMotionBlur = new Input<>("motionBlur", Boolean.class, outMotionBlur);
 		inHash = new Input<>("hash", Hash.class, outHash);
+		
+		getAggregator(); // Just to create an aggregator, maybe it wants to start some job immediately.
 	}
 	
 
 	private Aggregator aggregator;
+	
 	private final Object lock = new Object();
-	private final Object lockWaitingForCleaning = new Object();
+	private boolean invalidated = true;
 	
 	
-	boolean alreadyWaitingForCleaning = false;
 	@Override
-	protected <T> void onInputChangedOrInvalidated(Input<T> input) {
-		synchronized (lockWaitingForCleaning) {
-			if (alreadyWaitingForCleaning) {
-				return;
-			}
-			alreadyWaitingForCleaning = true;
-		}
-		synchronized (lock) {
-			synchronized (lockWaitingForCleaning) {
-				alreadyWaitingForCleaning = false;
-			}
-			if (aggregator != null) {
-				aggregator.release();
-				aggregator = null;
-			}
-		}
+	protected <T> void onInputChanged(Input<T> input, Event event) {
+		invalidated = true;
 		outputs().forEach(Output::fireInvalidated);
 	}
 	
 
 	private Aggregator getAggregator() {
 		synchronized (lock) {
-			if (aggregator == null) {
+			if (invalidated) {
+				invalidated = false;
+				if (aggregator != null) {
+					aggregator.release();
+				}
+				
 				Vec3 size = inSize.get();
 				TransformedColorFunction3 tcf3 =
 						new TransformedColorFunction3(
@@ -83,6 +79,7 @@ public class EAggregator extends ElementF<F1<Rr<Matrix<Color>>, Integer>> {
 				aggregator = inFAggregator.get().at(tcf3, size, inRepeats.get(), inMotionBlur.get(), inHash.get());
 				aggregator.onInvalidated().add(onSampleAdded);
 			}
+			
 			return aggregator;
 		}
 	} 

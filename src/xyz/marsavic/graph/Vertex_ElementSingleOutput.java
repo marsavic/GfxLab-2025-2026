@@ -5,15 +5,15 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import xyz.marsavic.reactions.elements.ElementF;
+import xyz.marsavic.reactions.elements.ElementSingleOutput;
 
 import java.util.Collection;
 import java.util.List;
 
 
-public class Vertex_ElementF extends VBox implements Vertex {
+public class Vertex_ElementSingleOutput extends VBox implements Vertex {
 	
-	public final ElementF<?> element;
+	public final ElementSingleOutput<?> element;
 	
 	public final VertexHeader vertexHeader;
 	public final VertexOutputJack vertexOutputJack;
@@ -21,7 +21,7 @@ public class Vertex_ElementF extends VBox implements Vertex {
 	public final List<VertexOutputJack> outputJacks;
 	
 	
-	public Vertex_ElementF(ElementF<?> element) {
+	public Vertex_ElementSingleOutput(ElementSingleOutput<?> element) {
 		this.element = element;
 		
 		getStyleClass().add("vertex");
@@ -46,7 +46,7 @@ public class Vertex_ElementF extends VBox implements Vertex {
 		outputJacks = List.of(vertexOutputJack);
 	}
 
-	@Override public ElementF<?> element() { return element; }	
+	@Override public ElementSingleOutput<?> element() { return element; }	
 	@Override public Collection<VertexInputJack> inputJacks () { return vertexInputs.inputJacks ; }
 	@Override public Collection<VertexOutputJack> outputJacks() { return outputJacks; }
 	@Override public Region region() { return this; }

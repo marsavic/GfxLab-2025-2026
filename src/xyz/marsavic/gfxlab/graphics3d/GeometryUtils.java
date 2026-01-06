@@ -14,4 +14,16 @@ public class GeometryUtils {
 		}
 	}
 	
+	
+	/** d reflected over n */
+	public static Vec3 reflected(Vec3 n, Vec3 d) {
+		return n.mul(2 * d.dot(n) / n.lengthSquared()).sub(d);
+	}
+	
+	
+	/** d reflected over n_ */
+	public static Vec3 reflectedN(Vec3 n_, Vec3 d) {
+		return n_.mul(2 * d.dot(n_)).sub(d);
+	}
+	
 }

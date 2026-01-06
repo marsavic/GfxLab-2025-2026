@@ -1,5 +1,6 @@
 package xyz.marsavic.gfxlab.graphics3d;
 
+import xyz.marsavic.functions.F0;
 import xyz.marsavic.functions.F1;
 import xyz.marsavic.geometry.Vector;
 import xyz.marsavic.gfxlab.*;
@@ -9,12 +10,8 @@ public abstract class RayTracer implements ColorFunction3 {
 	
 	private final F1<Scene, Double> fScene;
 	
-	public RayTracer(F1<Scene, Double> fScene) {
-		this.fScene = fScene;
-	}
-	
-	public RayTracer(Scene scene) {
-		this(t -> scene);
+	public RayTracer(F0<F1<Scene, Double>> ffScene) {
+		fScene = ffScene.at();
 	}
 	
 	
@@ -22,7 +19,7 @@ public abstract class RayTracer implements ColorFunction3 {
 	
 	
 	public Color at(Scene scene, Vector p) {
-		Ray ray = Ray.pd(Vec3.ZERO, Vec3.zp(1.0, p));
+		Ray ray = scene.camera().exitingRay(p);
 		return sample(scene, ray);
 	}
 	

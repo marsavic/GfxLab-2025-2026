@@ -2,12 +2,20 @@ package xyz.marsavic.gfxlab.playground.colorfunctions;
 
 import xyz.marsavic.geometry.Box;
 import xyz.marsavic.geometry.Vector;
-import xyz.marsavic.gfxlab.Color;
-import xyz.marsavic.gfxlab.ColorFunction3;
+import xyz.marsavic.gfxlab.*;
+import xyz.marsavic.gfxlab.aggregation.AggregatorOneAhead;
+import xyz.marsavic.gfxlab.aggregation.EAggregator;
+import xyz.marsavic.gfxlab.tonemapping.ColorTransform;
+import xyz.marsavic.gfxlab.tonemapping.ToneMapping2;
+import xyz.marsavic.gfxlab.tonemapping.ToneMapping3;
+import xyz.marsavic.gfxlab.tonemapping.colortransforms.Identity;
 import xyz.marsavic.random.sampling.Sampler;
+import xyz.marsavic.reactions.elements.ElementF;
 import xyz.marsavic.utils.Defaults;
 import xyz.marsavic.utils.Hash;
 
+import static xyz.marsavic.reactions.elements.Elements.*;
+import static xyz.marsavic.reactions.elements.Elements.e;
 import static xyz.marsavic.utils.Numeric.*;
 
 
@@ -56,6 +64,32 @@ public class Blobs implements ColorFunction3 {
 				Color.gray(0.5 * (q.xInt() ^ q.yInt()) / 64.0 * v) :
 				Color.okhcl(mpToZo(p.y()) + t, 0.13, 0.8)
 		).mul(Math.abs(k));
+	}
+	
+	
+	// ================================================================================================================
+	
+	public static ElementF<Animation> setup() {
+		return
+				e(ToneMapping3.class,
+						new EAggregator(
+								e(AggregatorOneAhead::new),
+								e(ScanLine.class
+										, e(5)
+										, e(0.1)
+										, e(0.2)
+										, e(Hash.class, e(0xB182847F9F621EB1L))
+								),
+								e(TransformationFromSize.ToGeometricT0_.class),
+								e(Vec3.xyz(360, 640, 640)),
+								e(true),
+								e(false),
+								e(Hash.class, e(0x8EE6B0C4E02CA7B2L))
+						),
+						e(ToneMapping2.class,
+								e(ColorTransform::asColorTransformFromMatrixColor, e(Identity.class))
+						)
+				);
 	}
 	
 }

@@ -10,6 +10,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.*;
 import org.kordamp.ikonli.javafx.FontIcon;
+import xyz.marsavic.functions.A0;
 import xyz.marsavic.functions.A1;
 import xyz.marsavic.geometry.Vector;
 import xyz.marsavic.gfxlab.ElementAnimationSink;
@@ -24,6 +25,9 @@ import xyz.marsavic.reactions.values.EventInvalidated;
 import xyz.marsavic.resources.BorrowManagerMap;
 import xyz.marsavic.resources.Rr;
 import xyz.marsavic.time.Profiler;
+import xyz.marsavic.utils.OnGC;
+import xyz.marsavic.utils.Parallel;
+import xyz.marsavic.utils.Utils;
 
 import java.util.Collection;
 import java.util.List;
@@ -40,15 +44,12 @@ public class Vertex_AnimationSink extends VBox implements Vertex {
 	public final VertexInputJack vertexInputJack;
 	public final List<VertexInputJack> inputJacks;
 
-	final A1<EventInvalidated> onInvalidated = this::update;
-	
 	private final ImageView imageView;
 	private final CheckBox chbEnabled;
 	private final Spinner<Integer> spnIFrame;
 	private final Button btnCopyToClipboard;
 	private final Button btnSaveImage;
-	private final Label lblInfo;
-	
+	private final Label lblInfo;	
 	
 	
 	public Vertex_AnimationSink(ElementAnimationSink element) {
@@ -111,46 +112,60 @@ public class Vertex_AnimationSink extends VBox implements Vertex {
 		
 		inputJacks = List.of(vertexInputJack);
 		
-		element.in0.output().onInvalidated().add(onInvalidated);
+		element.in0.output().onInvalidated().add(onInvalidated); // TODO this should listen to input changed instead (because input can invalidated also if it is reconnected)
+		
+		aStopLoop = Parallel.daemonLoop(this::loop);
+		OnGC.setOnGC(this, aStopLoop);
+		
 		animationTimer.start();
 	}
+
 	
 	AnimationTimer animationTimer = new AnimationTimer() {
 		@Override public void handle(long now) {
-			update();
+			orderUpdate();
 		}
 	};
 	
 	
-	private Future<?> future = null;
-	private final Profiler profilerUpdate = UtilsGL.profiler(this, "update");
+	final A1<EventInvalidated> onInvalidated = this::invalidated;
+	private final A0 aStopLoop;
+
+	private boolean shouldUpdate = true;
 	
-	public synchronized void update() {
-		profilerUpdate.measure(() -> {
-			Platform.runLater(() -> {
-				lblInfo.setText(String.format("%.1f", profilerFetch.eventsPerSecond()));
+	private int iFrameNext = 0;
+	
+	
+	
+
+	
+	private final Object lockShouldUpdate = new Object(); 
+	
+	private final Profiler profilerOrderUpdate = UtilsGL.profiler(this, "orderUpdate");
+	
+	private void orderUpdate() {
+		synchronized (lockShouldUpdate) {
+			profilerOrderUpdate.measure(() -> {
+				shouldUpdate = true;
+				lockShouldUpdate.notifyAll();
 			});
-			
-			if (!chbEnabled.isSelected()) {
-				return;
-			}
-			if (future != null && future.isDone()) {
-				future = null;
-			}
-			if (future == null) {
-				int iFrame = spnIFrame.getValue();
-				int iFrame_ = iFrame == -1 ? iFrameNext++ : iFrame;				
-				future = UtilsGL.parallel.submit(() -> fetch(iFrame_));
-			}
-		});
+		}
+	}
+	
+	
+	private void loop() {
+		synchronized (lockShouldUpdate) {
+			Utils.waitWhile(lockShouldUpdate, () -> !shouldUpdate);
+			shouldUpdate = false;
+		}
+		
+		fetch(iFrameNext++);
 	}
 
 	
 
 	private final Profiler profilerFetch = UtilsGL.profiler(this, "fetch");
 	private final BorrowManagerMap<WritableImage, Vector> images = new BorrowManagerMap<>(UtilsFX::createWritableImage, null);
-	private int iFrameNext = 0;
-	private boolean hasUpdate = false;
 	
 	private Vector size2old = Vector.ZERO;
 	
@@ -161,32 +176,32 @@ public class Vertex_AnimationSink extends VBox implements Vertex {
 			rMI.a(mI -> {
 				Rr<WritableImage> rImage = images.obtain(mI.size(), true);
 				rImage.a(image -> UtilsFX.writeArray2ToImage(image, mI));
-					Platform.runLater(() -> {
-						rImage.a(imageView::setImage);
-						rImage.release();
-						Vector size2new = UtilsFX.imageSize(imageView.getImage());
-						if (!Objects.equals(size2new, size2old)) {
-							size2old = size2new;
-							fireResized();							
-						}
-					});
+				Platform.runLater(() -> {
+					rImage.a(imageView::setImage);
+					rImage.release();
+					lblInfo.setText(String.format("%.1f", profilerFetch.eventsPerSecond()));
+					Vector size2new = UtilsFX.imageSize(imageView.getImage());
+					if (!Objects.equals(size2new, size2old)) {
+						size2old = size2new;
+						fireResized();
+					}
+				});
 			});
 			
 			rMI.release();
 		});
-		hasUpdate = false;
 	}
 	
+	private void invalidated(EventInvalidated e) {
+		orderUpdate();
+	}
+
+
 	private Image image() {
 		return imageView.getImage();
 	}
 	
 	
-	private void update(EventInvalidated e) {
-		hasUpdate = true;
-	}
-
-
 	@Override public ElementAnimationSink element() { return element; }	
 	@Override public Collection<VertexInputJack> inputJacks () { return inputJacks ; }
 	@Override public Collection<VertexOutputJack> outputJacks() { return List.of(); }
@@ -198,6 +213,6 @@ public class Vertex_AnimationSink extends VBox implements Vertex {
 	
 	public final Dispatcher<EventResized> dispatcherResized = new Dispatcher<>();
 	public Reactions<EventResized> onResized() { return dispatcherResized.reactions(); }
-	public void fireResized() { dispatcherResized.fire(new EventResized()); }
+	public void fireResized() { dispatcherResized.fireAsync(new EventResized(), r -> UtilsGL.parallel.submit(A0.fromRunnable(r))); }
 	
 }

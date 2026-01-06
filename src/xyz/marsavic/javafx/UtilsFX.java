@@ -4,12 +4,14 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
 import javafx.scene.image.WritablePixelFormat;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import xyz.marsavic.geometry.Box;
@@ -19,6 +21,7 @@ import xyz.marsavic.gfxlab.Color;
 import xyz.marsavic.gfxlab.MatrixColor;
 import xyz.marsavic.gfxlab.MatrixInts;
 import xyz.marsavic.gfxlab.gui.UtilsGL;
+import xyz.marsavic.utils.ListUtils;
 
 import javax.imageio.ImageIO;
 import java.io.*;
@@ -27,6 +30,11 @@ import java.nio.IntBuffer;
 
 public class UtilsFX {
 
+	public static void toggle(Pane parent, Node child) {
+		ListUtils.toggle(parent.getChildren(), child);
+	}
+	
+	
 	// Converters mars-bits <=> JavaFx ==================================================
 
 	public static Vector imageSize(Image image) {

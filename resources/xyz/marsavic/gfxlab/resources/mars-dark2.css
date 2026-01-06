@@ -45,7 +45,8 @@ hsl(220, 13%, 18%)
 .text-area .scroll-pane .viewport,
 .text-area .scroll-pane .content
 {
-    -fx-background-color: transparent;
+    /*-fx-background-color: transparent;*/
+    -fx-background-color: hsba(0, 0%, 0%, 0.125);
     /*-fx-control-inner-background: transparent;*/
     /*-fx-background-color: red;*/
 }
