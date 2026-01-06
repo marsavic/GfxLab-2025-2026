@@ -3,12 +3,11 @@ package xyz.marsavic.gfxlab.graphics3d.scenes;
 import xyz.marsavic.geometry.Vector;
 import xyz.marsavic.gfxlab.*;
 import xyz.marsavic.gfxlab.aggregation.AggregatorFrameLast;
-import xyz.marsavic.gfxlab.aggregation.AggregatorOneAhead;
 import xyz.marsavic.gfxlab.aggregation.EAggregator;
 import xyz.marsavic.gfxlab.graphics3d.*;
 import xyz.marsavic.gfxlab.graphics3d.cameras.Perspective;
 import xyz.marsavic.gfxlab.graphics3d.cameras.TransformedCamera;
-import xyz.marsavic.gfxlab.graphics3d.raytracing.RayTracerSimple;
+import xyz.marsavic.gfxlab.graphics3d.raytracers.RayTracerSimple;
 import xyz.marsavic.gfxlab.graphics3d.solids.Ball;
 import xyz.marsavic.gfxlab.graphics3d.solids.Group;
 import xyz.marsavic.gfxlab.graphics3d.solids.HalfSpace;
@@ -25,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static xyz.marsavic.gfxlab.Vec3.*;
-import static xyz.marsavic.reactions.elements.Elements.*;
 import static xyz.marsavic.reactions.elements.Elements.e;
 
 

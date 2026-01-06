@@ -1,10 +1,11 @@
-package xyz.marsavic.gfxlab.graphics3d.raytracing;
+package xyz.marsavic.gfxlab.graphics3d.raytracers;
 
 import xyz.marsavic.functions.F0;
 import xyz.marsavic.functions.F1;
 import xyz.marsavic.gfxlab.Color;
 import xyz.marsavic.gfxlab.Vec3;
 import xyz.marsavic.gfxlab.graphics3d.*;
+
 
 public class RayTracerSimple extends RayTracer {
 	

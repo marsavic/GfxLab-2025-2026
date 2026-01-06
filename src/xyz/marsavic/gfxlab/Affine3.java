@@ -1,9 +1,6 @@
 package xyz.marsavic.gfxlab;
 
 
-import xyz.marsavic.functions.F1;
-import xyz.marsavic.functions.FO_D;
-import xyz.marsavic.geometry.Vector;
 import xyz.marsavic.utils.Numeric;
 
 
@@ -68,7 +65,7 @@ public record Affine3(
 	}
 	
 	
-	public Affine3 transposeWithoutTranslation() {
+	public Affine3 transpose() {
 		return new Affine3(
 				m00, m10, m20, 0,
 				m01, m11, m21, 0,
@@ -204,6 +201,14 @@ public record Affine3(
 		}
 	}
 
+	public static Affine3 isometry(double phyZ, double phiY, double phiX, double translateX, double translateY, double translateZ) {
+		return Affine3.IDENTITY
+				.then(Affine3.rotationAboutZ(phyZ))
+				.then(Affine3.rotationAboutY(phiY))
+				.then(Affine3.rotationAboutX(phiX))
+				.then(Affine3.translation(Vec3.xyz(translateX, translateY, translateZ)));
+	}
+	
 	
 	public static Affine3 chain(Affine3... transformations) {
 		Affine3 res = Affine3.IDENTITY;

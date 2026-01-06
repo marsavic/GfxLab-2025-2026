@@ -1,6 +1,5 @@
 package xyz.marsavic.gfxlab.graphics3d.scenes;
 
-import javafx.scene.transform.Affine;
 import xyz.marsavic.functions.F1;
 import xyz.marsavic.geometry.Vector;
 import xyz.marsavic.gfxlab.*;
@@ -9,7 +8,7 @@ import xyz.marsavic.gfxlab.aggregation.EAggregator;
 import xyz.marsavic.gfxlab.graphics3d.*;
 import xyz.marsavic.gfxlab.graphics3d.cameras.Perspective;
 import xyz.marsavic.gfxlab.graphics3d.cameras.TransformedCamera;
-import xyz.marsavic.gfxlab.graphics3d.raytracing.RayTracerSimple;
+import xyz.marsavic.gfxlab.graphics3d.raytracers.RayTracerSimple;
 import xyz.marsavic.gfxlab.graphics3d.solids.Ball;
 import xyz.marsavic.gfxlab.graphics3d.solids.Group;
 import xyz.marsavic.gfxlab.graphics3d.solids.HalfSpace;

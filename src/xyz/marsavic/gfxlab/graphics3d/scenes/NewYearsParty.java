@@ -9,7 +9,7 @@ import xyz.marsavic.gfxlab.Vec3;
 import xyz.marsavic.gfxlab.aggregation.AggregatorOneAhead;
 import xyz.marsavic.gfxlab.aggregation.EAggregator;
 import xyz.marsavic.gfxlab.graphics3d.*;
-import xyz.marsavic.gfxlab.graphics3d.raytracing.RayTracerSimple;
+import xyz.marsavic.gfxlab.graphics3d.raytracers.RayTracerSimple;
 import xyz.marsavic.gfxlab.graphics3d.solids.Ball;
 import xyz.marsavic.gfxlab.graphics3d.solids.Group;
 import xyz.marsavic.gfxlab.tonemapping.ToneMapping2;
@@ -22,10 +22,8 @@ import xyz.marsavic.utils.Numeric;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.random.RandomGenerator;
 
 import static xyz.marsavic.gfxlab.Vec3.*;
-import static xyz.marsavic.reactions.elements.Elements.*;
 import static xyz.marsavic.reactions.elements.Elements.e;
 
 

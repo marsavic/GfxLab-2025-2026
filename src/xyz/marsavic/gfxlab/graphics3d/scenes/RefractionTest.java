@@ -1,7 +1,7 @@
 package xyz.marsavic.gfxlab.graphics3d.scenes;
 
 import xyz.marsavic.gfxlab.*;
-import xyz.marsavic.gfxlab.aggregation.AggregatorOneAhead;
+import xyz.marsavic.gfxlab.aggregation.AggregatorFrameLast;
 import xyz.marsavic.gfxlab.aggregation.EAggregator;
 import xyz.marsavic.gfxlab.graphics3d.*;
 import xyz.marsavic.gfxlab.graphics3d.cameras.Perspective;
@@ -17,96 +17,73 @@ import xyz.marsavic.gfxlab.tonemapping.matrixcolor_to_colortransforms.AutoSoft;
 import xyz.marsavic.reactions.elements.ElementF;
 import xyz.marsavic.utils.Hash;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.random.RandomGenerator;
 
 import static xyz.marsavic.gfxlab.Vec3.*;
-import static xyz.marsavic.reactions.elements.Elements.e;
+import static xyz.marsavic.reactions.elements.Elements.*;
 
 
-public record DiscoRoom(
-	int nBalls,
-	int nLights,
-	Hash hash,
-	double shininess
+public record RefractionTest(
+		double refractiveIndex1,
+		double refractiveIndex2,
+		Camera camera
 ) implements FFSceneT {
-	
 	
 	@Override
 	public Solid solid() {
-		RandomGenerator rngBalls = hash.rng();
-		
 		var materialUVWalls = Grid.standardQuarter(Color.WHITE);
+		var materialUVWallsL = Grid.standardQuarter(Color.hsb(0.00, 0.5, 1.0));
+		var materialUVWallsR = Grid.standardQuarter(Color.hsb(0.33, 0.5, 1.0));
 		
-		Collection<Solid> solids = new ArrayList<>();
-		Collections.addAll(solids,
-				HalfSpace.pn(Vec3.xyz(-1, 0, 0), Vec3.xyz(1, 0, 0), materialUVWalls),
-				HalfSpace.pn(Vec3.xyz(1, 0, 0), Vec3.xyz(-1, 0, 0), materialUVWalls),
+		return Group.of(
+				HalfSpace.pn(Vec3.xyz(-1, 0, 0), Vec3.xyz(1, 0, 0), materialUVWallsL),
+				HalfSpace.pn(Vec3.xyz(1, 0, 0), Vec3.xyz(-1, 0, 0), materialUVWallsR),
 				HalfSpace.pn(Vec3.xyz(0, -1, 0), Vec3.xyz(0, 1, 0), materialUVWalls),
 				HalfSpace.pn(Vec3.xyz(0, 1, 0), Vec3.xyz(0, -1, 0), materialUVWalls),
-				HalfSpace.pn(Vec3.xyz(0, 0, 1), Vec3.xyz(0, 0, -1), materialUVWalls)
+				HalfSpace.pn(Vec3.xyz(0, 0, 1), Vec3.xyz(0, 0, -1), materialUVWalls),
+				
+				Ball.cr(Vec3.xyz(-0.3, 0.3, 0.0), 0.4, Material.GLASS.refractive(Color.hsb(0.7, 0.2, 1.0))),
+				Ball.cr(Vec3.xyz(0.4, -0.4, 0.0), 0.4, Material.GLASS),
+				Ball.cr(Vec3.xyz(-0.3, -0.4, -0.6), 0.4, Material.GLASS.refractiveIndex(1.0 / refractiveIndex1)),
+				Ball.cr(Vec3.xyz(0.4, 0.3, 0.6), 0.4, Material.GLASS.refractiveIndex(refractiveIndex2))
 		);
-		
-		for (int i = 0; i < nBalls; i++) {
-			double hue = rngBalls.nextDouble();
-			Material material = rngBalls.nextDouble() < 0.8 ?
-					Material.matte(Color.hsb(hue, 0.9, 0.9)).specular(Color.WHITE).shininess(shininess*100) :
-					Material.MIRROR;
-			
-			solids.add(Ball.cr(Vec3.random(rngBalls).ZOtoMP(), 0.2, material));
-		}
-		
-		return Group.of(solids);
 	}
-	
 	
 	@Override
 	public Collection<Light> lights() {
-		RandomGenerator rngLights = hash.add(0xE43B05F4302C4B1BL).rng();
-		List<Light> lights = new ArrayList<>();
-		for (int i = 0; i < nLights; i++) {
-			lights.add(Light.pc(
-					Vec3.random(rngLights).ZOtoMP(),
-					Color.hsb(rngLights.nextDouble(), 0.75, 1))
-			);
-		}
-		return lights;
-	}
-	
-
-	@Override
-	public Camera camera() {
-		return new TransformedCamera(
-				new Perspective(1.0/3),
-				Affine3.IDENTITY
-						.then(Affine3.translation(xyz(0, 0, -4)))
+		return List.of(
+				Light.pc(Vec3.xyz(-0.7, 0.7, -0.7), Color.WHITE),
+				Light.pc(Vec3.xyz(-0.7, 0.7,  0.7), Color.WHITE),
+				Light.pc(Vec3.xyz( 0.7, 0.7, -0.7), Color.WHITE),
+				Light.pc(Vec3.xyz( 0.7, 0.7,  0.7), Color.WHITE)
 		);
 	}
 	
 	
-	
 	// ================================================================================================================
+
 	
 	public static ElementF<Animation> setup() {
 		return
 				e(ToneMapping3.class,
 						new EAggregator(
-								e(AggregatorOneAhead::new),
+								e(AggregatorFrameLast::new),
+//								e(AggregatorOnDemand::new), // faster but not antialiased 
 								e(RayTracerSimple.class,
-									e(DiscoRoom.class
-											, e(16)
-											, e(16)
-											, e(Hash.class, e(0xF1A423D6167D9818L))
-											, e(0.16)
+									e(RefractionTest.class
+											, e(1.0 / 2.5)
+											, e(0.6)
+											, e(TransformedCamera.class
+												, e(Perspective.class, e(1/3.0))
+												, e(Affine3::isometry, e(0.0), e(0.0), e(0.0), e(0.0), e(0.0), e(-4.0))
+											)
 									),
 									e(16)
 								),
 								e(TransformationFromSize.ToGeometricT0_.class),
-								e(xyz(360, 640, 640)),
-								e(false),								
+								e(xyz(1, 640, 640)),
+								e(true),								
 								e(false),								
 								e(Hash.class, e(0x8EE6B0C4E02CA7B2L))
 						),
@@ -115,5 +92,6 @@ public record DiscoRoom(
 						)
 				);
 	}
+	
 	
 }
