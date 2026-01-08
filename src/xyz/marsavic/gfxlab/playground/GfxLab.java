@@ -1,8 +1,7 @@
 package xyz.marsavic.gfxlab.playground;
 
 import xyz.marsavic.gfxlab.*;
-import xyz.marsavic.gfxlab.graphics3d.scenes.Mirrors;
-import xyz.marsavic.gfxlab.graphics3d.scenes.RefractionTest;
+import xyz.marsavic.gfxlab.graphics3d.scenes.*;
 import xyz.marsavic.reactions.elements.ElementF;
 
 

@@ -97,11 +97,12 @@ public record NewYearsParty(
 						new EAggregator(
 								e(AggregatorOneAhead::new),
 								e(RayTracerSimple.class,
-									e(NewYearsParty.class
-											, e(51)
-											, e(3)
-											, e(Hash.class, e(0xAC43D7AA071209A6L))
-									)
+										e(NewYearsParty.class
+												, e(51)
+												, e(3)
+												, e(Hash.class, e(0xAC43D7AA071209A6L))
+										),
+										e(16)
 								),
 								e(TransformationFromSize.ToGeometricT0_.class),
 								e(Vec3.xyz(360, 640, 640)),
