@@ -211,10 +211,24 @@ public record Affine3(
 	
 	
 	public static Affine3 chain(Affine3... transformations) {
+/*
 		Affine3 res = Affine3.IDENTITY;
 		for (Affine3 t : transformations) {
 			res = res.then(t);
 		}
+		return res;
+		
+		We optimize a bit:
+*/
+		if (transformations.length == 0) {
+			return IDENTITY;
+		}
+		
+		Affine3 res = transformations[0];
+		for (int i = 1; i < transformations.length; i++) {
+			res = res.then(transformations[i]);
+		}
+		
 		return res;
 	}
 	

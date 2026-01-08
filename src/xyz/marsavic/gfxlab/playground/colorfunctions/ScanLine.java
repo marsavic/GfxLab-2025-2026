@@ -35,7 +35,7 @@ public class ScanLine implements ColorFunction3 {
 								e(TransformationFromSize.ToIdentity_.class),
 								e(Vec3.xyz(360, 640, 640)),
 								e(true),								
-								e(false),								
+								e(true),								
 								e(Hash.class, e(0x8EE6B0C4E02CA7B2L))
 						),
 						e(ToneMapping2.class,

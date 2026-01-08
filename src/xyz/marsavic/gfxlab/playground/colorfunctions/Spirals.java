@@ -13,7 +13,6 @@ import xyz.marsavic.utils.Hash;
 import xyz.marsavic.utils.Numeric;
 
 import static xyz.marsavic.reactions.elements.Elements.*;
-import static xyz.marsavic.reactions.elements.Elements.e;
 
 
 public record Spirals(

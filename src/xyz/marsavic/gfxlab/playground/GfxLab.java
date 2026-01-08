@@ -10,21 +10,21 @@ public class GfxLab {
 	public static ElementF<Animation> setup() {
 		return
 //				OkLab
-//				ColorFunction3Example	
-//				Gradient	
-//				ScanLine	
-//				GammaTest	
-//				Spirals	
-//				Blobs	
-//				SceneTest	
+//				ColorFunction3Example
+//				Gradient
+//				ScanLine
+//				GammaTest
+//				Spirals
+//				Blobs
+//				SceneTest
 //				ColorFunction3
 
 //				SceneTest
-//				DiscoRoom
-				Mirrors
+				DiscoRoom
+//				Mirrors
 //				RefractionTest
 //				NewYearsParty
-		.setup();				
+		.setup();
 	}
 	
 }

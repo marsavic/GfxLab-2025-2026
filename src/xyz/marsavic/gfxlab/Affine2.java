@@ -59,7 +59,7 @@ public record Affine2(
 	}
 	
 	
-	public Affine2 transposeWithoutTranslation() {
+	public Affine2 transpose() {
 		return new Affine2(
 				m00, m10, 0,
 				m01, m11, 0

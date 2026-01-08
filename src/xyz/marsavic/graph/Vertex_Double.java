@@ -35,7 +35,7 @@ public class Vertex_Double extends HBox implements Vertex {
 		
 		Double value = element.out.get();
 		
-		Slider slider = new Slider(0, 1, value);
+		Slider slider = new Slider(-1, 1, value);
 		updateUI(value);
 		slider.valueProperty().addListener((observable, _oldValue, newValue) -> update(newValue.doubleValue()));
 		

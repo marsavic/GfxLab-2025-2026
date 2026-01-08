@@ -2,13 +2,12 @@ package xyz.marsavic.gfxlab.graphics3d.scenes;
 
 import xyz.marsavic.functions.F1;
 import xyz.marsavic.geometry.Vector;
-import xyz.marsavic.gfxlab.Animation;
-import xyz.marsavic.gfxlab.Color;
-import xyz.marsavic.gfxlab.TransformationFromSize;
-import xyz.marsavic.gfxlab.Vec3;
+import xyz.marsavic.gfxlab.*;
 import xyz.marsavic.gfxlab.aggregation.AggregatorOneAhead;
 import xyz.marsavic.gfxlab.aggregation.EAggregator;
 import xyz.marsavic.gfxlab.graphics3d.*;
+import xyz.marsavic.gfxlab.graphics3d.cameras.Perspective;
+import xyz.marsavic.gfxlab.graphics3d.cameras.TransformedCamera;
 import xyz.marsavic.gfxlab.graphics3d.raytracers.RayTracerSimple;
 import xyz.marsavic.gfxlab.graphics3d.solids.Ball;
 import xyz.marsavic.gfxlab.graphics3d.solids.Group;
@@ -24,7 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static xyz.marsavic.gfxlab.Vec3.*;
-import static xyz.marsavic.reactions.elements.Elements.e;
+import static xyz.marsavic.reactions.elements.Elements.*;
 
 
 public record NewYearsParty(
@@ -33,41 +32,38 @@ public record NewYearsParty(
 	Hash hash
 ) implements FFSceneT {
 
-	private static final Vec3 o = xyz(0, 0, 4);
 	private static final int a = 5;
 	private static final int b = 2;
 	
 	
 	@Override
-	public F1<Solid, Double> fSolidT() {
-		return t -> {
-			List<Solid> solids = new ArrayList<>();
-	
-			for (int i = 0; i < nBalls; i++) {
-				Color color = Color.hsb(0.4, 0.8, 0.5);
-				F1<Material, Vector> fMaterial = uv -> Material.matte(
-						color.mul(Math.min(
-								Numeric.mod(uv.dot(Vector.xy(a, b))), 
-								Numeric.mod(uv.dot(Vector.xy(-a, b)))
-								) < 0.2 ? 1.0 : 0.8										
-						)
-				);
-				
-				double k = (double) i / nBalls;
-				double m = (1-k)*(1-k);
-				Vec3 p = yp(m, Vector.polar(k / 2, k * 37 - t)) // TODO change when we add transformations of solids (pull everything outside the t -> {...}, and only apply the transformation inside.
-						.mul(4)
-						.add(xyz(0, -1.5, 0));			
-				Ball b = Ball.cr(p.add(o), 0.3 * (0.5 + 0.5 * (1-m)), fMaterial);
-				solids.add(b);
-			}
+	public Solid solid() {
+		List<Solid> solids = new ArrayList<>();
+
+		for (int i = 0; i < nBalls; i++) {
+			Color color = Color.hsb(0.4, 0.8, 0.5);
+			F1<Material, Vector> fMaterial = uv -> Material.matte(
+					color.mul(Math.min(
+							Numeric.mod(uv.dot(Vector.xy(a, b))), 
+							Numeric.mod(uv.dot(Vector.xy(-a, b)))
+							) < 0.2 ? 1.0 : 0.8										
+					)
+			);
 			
-			solids.add(Ball.cr(xyz(0, 0, 0).add(o), -6, Material.matte(Color.hsb(0.8, 0.3, 0.07))));
-			
-			solids.add(Ball.cr(xyz(0, 2.8, 0).add(o), 0.2, Material.matte(Color.hsb(0.16, 0.8, 1.0))));
-			
-			return Group.of(solids);
-		};
+			double k = (double) i / nBalls;
+			double m = (1-k)*(1-k);
+			Vec3 p = yp(m, Vector.polar(k / 2, k * 37))
+					.mul(4)
+					.add(xyz(0, -1.5, 0));			
+			Ball b = Ball.cr(p, 0.3 * (0.5 + 0.5 * (1-m)), fMaterial);
+			solids.add(b);
+		}
+		
+		solids.add(Ball.cr(xyz(0, 0, 0), -6, Material.matte(Color.hsb(0.8, 0.3, 0.07))));
+		
+		solids.add(Ball.cr(xyz(0, 2.8, 0), 0.2, Material.matte(Color.hsb(0.16, 0.8, 1.0))));
+		
+		return Group.of(solids);
 	}
 	
 	
@@ -76,16 +72,28 @@ public record NewYearsParty(
 		return t -> {
 			List<Light> lights = new ArrayList<>();
 			
-			lights.add(Light.pc(xyz(0, 2.5, -1.5).add(o), Color.gray(1)));
+			lights.add(Light.pc(xyz(0, 2.5, -1.5), Color.gray(1)));
 			
 			for (int i = 0; i < nLights; i++) {
 				double k = (double) i / nLights;
 				Vec3 p = yp(Numeric.sinT(3 * t), Vector.polar(4, 2 * t + k));
-				lights.add(Light.pc(p.add(o), Color.gray(3.6)));
+				lights.add(Light.pc(p, Color.gray(3.6)));
 			}
 			
 			return lights;
 		};
+	}
+	
+	
+	@Override
+	public F1<Camera, Double> fCameraT() {
+		return t -> new TransformedCamera(
+				Perspective.DEFAULT,
+				Affine3.chain(
+						Affine3.translation(Vec3.xyz(0, 0, -4)),
+						Affine3.rotationAboutY(t)
+				)
+		);
 	}
 	
 	

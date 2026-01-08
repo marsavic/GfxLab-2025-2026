@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static xyz.marsavic.gfxlab.Vec3.*;
-import static xyz.marsavic.reactions.elements.Elements.e;
+import static xyz.marsavic.reactions.elements.Elements.*;
 
 
 public record Mirrors(
@@ -85,11 +85,11 @@ public record Mirrors(
 						new EAggregator(
 								e(AggregatorFrameLast::new),
 								e(RayTracerSimple.class,
-										e(Mirrors.class
-												, e(3)
-												, e(0.16)
-										),
-										e(16)
+									e(Mirrors.class
+											, e(3)
+											, e(0.16)
+									),
+									e(16)
 								),
 								e(TransformationFromSize.ToGeometricT0_.class),
 								e(xyz(1, 640, 640)),

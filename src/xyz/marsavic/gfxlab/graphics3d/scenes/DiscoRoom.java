@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.random.RandomGenerator;
 
 import static xyz.marsavic.gfxlab.Vec3.*;
-import static xyz.marsavic.reactions.elements.Elements.e;
+import static xyz.marsavic.reactions.elements.Elements.*;
 
 
 public record DiscoRoom(
@@ -53,7 +53,7 @@ public record DiscoRoom(
 		for (int i = 0; i < nBalls; i++) {
 			double hue = rngBalls.nextDouble();
 			Material material = rngBalls.nextDouble() < 0.8 ?
-					Material.matte(Color.hsb(hue, 0.9, 0.9)).specular(Color.WHITE).shininess(shininess*100) :
+					Material.matte(Color.hsb(hue, 0.9, 0.9)).specular(Color.WHITE).shininess(16) :
 					Material.MIRROR;
 			
 			solids.add(Ball.cr(Vec3.random(rngBalls).ZOtoMP(), 0.2, material));
@@ -90,6 +90,7 @@ public record DiscoRoom(
 	
 	// ================================================================================================================
 	
+
 	public static ElementF<Animation> setup() {
 		return
 				e(ToneMapping3.class,

@@ -12,7 +12,6 @@ import xyz.marsavic.reactions.elements.ElementF;
 import xyz.marsavic.utils.Hash;
 
 import static xyz.marsavic.reactions.elements.Elements.*;
-import static xyz.marsavic.reactions.elements.Elements.e;
 
 
 public record OkLab(
