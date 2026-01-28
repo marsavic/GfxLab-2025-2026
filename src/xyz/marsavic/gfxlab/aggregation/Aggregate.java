@@ -5,7 +5,7 @@ import xyz.marsavic.gfxlab.Color;
 import xyz.marsavic.gfxlab.ColorFunction3;
 import xyz.marsavic.gfxlab.Matrix;
 import xyz.marsavic.gfxlab.MatrixColor;
-import xyz.marsavic.gfxlab.gui.UtilsGL;
+import xyz.marsavic.gfxlab.UtilsGL;
 import xyz.marsavic.resources.Rr;
 import xyz.marsavic.utils.Hash;
 import xyz.marsavic.utils.Utils;
@@ -127,7 +127,7 @@ public class Aggregate {
 	}
 	
 	
-	/** If there are no samples it will block while waiting for at least one sample before computing the average. */
+	/** If there are no samples, it will block while waiting for at least one sample before computing the average. */
 	public Rr<Matrix<Color>> avgAtLeastOne() {
 		return Utils.waitWhile(this, () -> getState() == null || getState().count == 0, this::getState).avg();
 	}

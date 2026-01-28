@@ -1,7 +1,5 @@
 package xyz.marsavic.gfxlab.graphics3d.scenes;
 
-import xyz.marsavic.functions.F1;
-import xyz.marsavic.geometry.Vector;
 import xyz.marsavic.gfxlab.*;
 import xyz.marsavic.gfxlab.aggregation.AggregatorFrameLast;
 import xyz.marsavic.gfxlab.aggregation.EAggregator;
@@ -19,60 +17,49 @@ import xyz.marsavic.gfxlab.tonemapping.matrixcolor_to_colortransforms.AutoSoft;
 import xyz.marsavic.reactions.elements.ElementF;
 import xyz.marsavic.utils.Hash;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import static xyz.marsavic.gfxlab.Vec3.*;
 import static xyz.marsavic.reactions.elements.Elements.*;
 
 
-public record Mirrors(
-	int nBalls,
-	double k
+public record TransformationsTest(
+		double k,
+		double phiX,
+		double phiY,
+		Camera camera
 ) implements FFSceneT {
 	
 	@Override
 	public Solid solid() {
-		var materialUVWalls  = Grid.standardQuarter(Color.WHITE);
+		var materialUVWalls = Grid.standardQuarter(Color.WHITE);
 		var materialUVWallsL = Grid.standardQuarter(Color.hsb(0.00, 0.5, 1.0));
 		var materialUVWallsR = Grid.standardQuarter(Color.hsb(0.33, 0.5, 1.0));
 		
-		Collection<Solid> solids = new ArrayList<>();
-		Collections.addAll(solids,
-				HalfSpace.pn(Vec3.xyz(-1,  0,  0), Vec3.xyz( 1,  0,  0), materialUVWallsL),
-				HalfSpace.pn(Vec3.xyz( 1,  0,  0), Vec3.xyz(-1,  0,  0), materialUVWallsR),
-				HalfSpace.pn(Vec3.xyz( 0, -1,  0), Vec3.xyz( 0,  1,  0), materialUVWalls),
-				HalfSpace.pn(Vec3.xyz( 0,  1,  0), Vec3.xyz( 0, -1,  0), materialUVWalls),
-				HalfSpace.pn(Vec3.xyz( 0,  0,  1), Vec3.xyz( 0,  0, -1), materialUVWalls)
+		return Group.of(
+				HalfSpace.pn(Vec3.xyz(-1, 0, 0), Vec3.xyz(1, 0, 0), materialUVWallsL),
+				HalfSpace.pn(Vec3.xyz(1, 0, 0), Vec3.xyz(-1, 0, 0), materialUVWallsR),
+				HalfSpace.pn(Vec3.xyz(0, -1, 0), Vec3.xyz(0, 1, 0), materialUVWalls),
+				HalfSpace.pn(Vec3.xyz(0, 1, 0), Vec3.xyz(0, -1, 0), materialUVWalls),
+				HalfSpace.pn(Vec3.xyz(0, 0, 1), Vec3.xyz(0, 0, -1), materialUVWalls),
+				
+				Ball.cr(Vec3.xyz(0, 0, 0), 0.5, Material.GLASS)
+						.transformed(Affine3.chain(
+								Affine3.scaling(Vec3.xyz(k, 1.0, 1.0)),
+								Affine3.rotationAboutY(phiY),
+								Affine3.rotationAboutX(phiX)
+						))
 		);
-		
-		for (int i = 0; i < nBalls; i++) {
-			Vector c = Vector.polar(0.5, 1.0 * i / nBalls);
-			Ball ball = Ball.cr(Vec3.zp(0, c), 0.4, uv -> Material.MIRROR);
-			solids.add(ball);
-		}
-		
-		return Group.of(solids);
 	}
-	
 	
 	@Override
 	public Collection<Light> lights() {
 		return List.of(
-				Light.pc(Vec3.xyz(-0.8, 0.8, -0.8), Color.WHITE),
-				Light.pc(Vec3.xyz(-0.8, 0.8,  0.8), Color.WHITE),
-				Light.pc(Vec3.xyz( 0.8, 0.8, -0.8), Color.WHITE),
-				Light.pc(Vec3.xyz( 0.8, 0.8,  0.8), Color.WHITE)
-		);		
-	}
-	
-	@Override
-	public Camera camera() {
-		return new TransformedCamera(
-				new Perspective(k),
-				Affine3.translation(Vec3.xyz(0, 0, -3))
+				Light.pc(Vec3.xyz(-0.7, 0.7, -0.7), Color.WHITE),
+				Light.pc(Vec3.xyz(-0.7, 0.7,  0.7), Color.WHITE),
+				Light.pc(Vec3.xyz( 0.7, 0.7, -0.7), Color.WHITE),
+				Light.pc(Vec3.xyz( 0.7, 0.7,  0.7), Color.WHITE)
 		);
 	}
 	
@@ -85,10 +72,16 @@ public record Mirrors(
 				e(ToneMapping3.class,
 						new EAggregator(
 								e(AggregatorFrameLast::new),
+//								e(AggregatorOnDemand::new), // faster but not antialiased 
 								e(RayTracerSimple.class,
-									e(Mirrors.class
-											, e(3)
-											, e(0.16)
+									e(TransformationsTest.class
+											, e(0.5)
+											, e(0.0)
+											, e(0.0)
+											, e(TransformedCamera.class
+												, e(Perspective.class, e(1/3.0))
+												, e(Affine3::isometry, e(0.0), e(0.0), e(0.0), e(0.0), e(0.0), e(-4.0))
+											)
 									),
 									e(16)
 								),
@@ -103,5 +96,6 @@ public record Mirrors(
 						)
 				);
 	}
+	
 	
 }

@@ -20,9 +20,12 @@ public class GfxLab {
 //				ColorFunction3
 
 //				SceneTest
-				DiscoRoom
+//				DiscoRoom
 //				Mirrors
 //				RefractionTest
+//				TransformationsTest
+//				CSGTest
+				GoldTrinket
 //				NewYearsParty
 		.setup();
 	}

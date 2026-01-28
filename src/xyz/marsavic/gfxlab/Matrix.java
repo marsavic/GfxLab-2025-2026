@@ -3,7 +3,6 @@ package xyz.marsavic.gfxlab;
 import xyz.marsavic.functions.F1;
 import xyz.marsavic.functions.F2;
 import xyz.marsavic.geometry.Vector;
-import xyz.marsavic.gfxlab.gui.UtilsGL;
 
 
 public interface Matrix<E> extends Array2<E> {

@@ -10,8 +10,6 @@ import xyz.marsavic.reactions.values.EventInvalidated;
 import xyz.marsavic.resources.Rr;
 import xyz.marsavic.utils.Hash;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 
 public class EAggregator extends ElementSingleOutput<F1<Rr<Matrix<Color>>, Integer>> {
 	

@@ -16,7 +16,7 @@ public record ToneMapping3(
 	@Override
 	public Rr<Matrix<Integer>> at(Integer iFrame) {
 		Rr<Matrix<Color>> rFrame = frFrame.at(iFrame);
-		Rr<Matrix<Integer>> res = frToneMapping2.at(rFrame.borrow());
+		Rr<Matrix<Integer>> res = frToneMapping2.at(rFrame.lend());
 		rFrame.release();
 		return res;
 	}

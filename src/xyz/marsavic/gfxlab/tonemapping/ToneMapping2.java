@@ -4,7 +4,7 @@ import xyz.marsavic.functions.F1;
 import xyz.marsavic.gfxlab.Array2;
 import xyz.marsavic.gfxlab.Color;
 import xyz.marsavic.gfxlab.Matrix;
-import xyz.marsavic.gfxlab.gui.UtilsGL;
+import xyz.marsavic.gfxlab.UtilsGL;
 import xyz.marsavic.resources.Br;
 import xyz.marsavic.resources.Rr;
 

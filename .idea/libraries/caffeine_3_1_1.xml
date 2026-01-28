@@ -11,8 +11,6 @@
       <root url="jar://$PROJECT_DIR$/lib/ikonli-materialdesign2-pack-12.3.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/j2objc-annotations-2.8.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/jsr305-3.0.2.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/mars-bits-2024-10-31.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/object-instruments-2024-10-31.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

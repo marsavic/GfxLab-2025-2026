@@ -1,6 +1,5 @@
 package xyz.marsavic.graph;
 
-import javafx.application.Platform;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -69,6 +68,7 @@ public class Graph extends Pane {
 
 	
 	private Vertex createVertexByType(Element e) {
+//		if (e instanceof ElementAnimationSink   e_) return new Vertex_AnimationSinkImage (e_);
 		if (e instanceof ElementAnimationSink   e_) return new Vertex_AnimationSink      (e_);
 		if (e instanceof ElementDouble          e_) return new Vertex_Double             (e_);
 		if (e instanceof ElementInteger         e_) return new Vertex_Integer            (e_);
@@ -127,135 +127,91 @@ public class Graph extends Pane {
 	
 	
 	
-	private static Map<Element, Box> getVertexBoxesFX(Map<Element, Vertex> map_element_vertex) {
+	private static Map<Element, Box> getVertexBoxes(Map<Element, Vertex> map_element_vertex) {
 		return
 				map_element_vertex.entrySet().stream().collect(Collectors.toMap(
 						Map.Entry::getKey,
-						entry -> UtilsFX.toBox(entry.getValue().region())
+						entry -> UtilsFX.box(entry.getValue().region())
 				));
 	}
 	
 	
-	private static void setVertexPositionsFX(Map<Element, Vertex> map_element_vertex, Map<Element, Box> positions) {
+	private static void setVertexPositions(Map<Element, Vertex> map_element_vertex, Map<Element, Box> positions) {
 		positions.forEach((e, b) ->
 				UtilsFX.setLayoutP(map_element_vertex.get(e).region(), b.p())
 		);			
 	}
 	
 	
+/*
+	// This is how I call Task. Not really needed here, as 'new LayoutDFS(...)' is fast.
+	
 	public void layItOutFX() {
 		Map<Element, Box> boxesBefore = getVertexBoxesFX(map_element_vertex);
-		Map<Element, Box> boxesAfter = new LayoutDFS(boxesBefore, map_inputEdges).result; // TODO Not FX, call as Task
-		setVertexPositionsFX(map_element_vertex, boxesAfter);
-		centerContentFX();
-	}
-	
-	
-	public void jiggle() {                                                                // TODO Do with jiggle same as with layItOut. Separate class, not touching FX. 
-		Map<Vertex, Vector> p = new HashMap<>();
-		
-		int i = 0;
-
-		while (i < 10000) {
-			vertices.forEach(v -> p.put(v, UtilsFX.toBox(v.region()).p()));
-			
-			double k = 1 + 8.0 / (i + 1);
-			jiggleOnce(k);
-			i++;
-			
-			double dMax = 0;
-			for (Vertex v : vertices) {
-				double distance = UtilsFX.toBox(v.region()).p().distanceTo(p.get(v));
-				dMax = Math.max(dMax, distance);
+		Task<Map<Element, Box>> task = new Task<>() {
+			@Override
+			protected Map<Element, Box> call() throws Exception {
+				return new LayoutDFS(boxesBefore, map_inputEdges).result;
 			}
-			
-			if (dMax <= 0.01) break;
-		}
-		
-		Platform.runLater(() -> {
-			// Align to pixels
+		};
+		task.setOnSucceeded(e -> {
+			setVertexPositionsFX(map_element_vertex, task.getValue());
 			centerContentFX();
-			alignVerticesToPixels();
 		});
 		
-/*
-		System.out.println("Jiggles: " + i);
-		vertices.forEach(v -> p.put(n, box(v).p()));
-		jiggle(1);
-		double dMax = 0;
-		for (Vertex v : vertices) {
-			double distance = box(v).p().distanceTo(p.get(v));
-			dMax = Math.max(dMax, distance);
-		}
-		System.out.println("Still jiggling by " + dMax);
+		ForkJoinPool.commonPool().submit(task);
+	}
 */
+
+	
+	private static final Vector margins = Vector.xy(30, 10);
+	
+	public static final Layout layout1 = Layout.combine(
+			Layout.margins(margins),
+			LayoutDFS.INSTANCE,
+			LayoutForces.INSTANCE,
+			Layout.margins(margins.inverse()),
+			Layout.CENTER,
+			Layout.QUANTIZE			
+	);
+
+	public static final Layout layout2 = Layout.combine(
+			Layout.margins(margins),
+			LayoutDFS.INSTANCE,
+			Layout.margins(margins.inverse()),
+			Layout.CENTER,
+			Layout.QUANTIZE			
+	);
+
+	public static final Layout layout3 = Layout.combine(
+			Layout.margins(margins),
+			LayoutForces.INSTANCE,
+			Layout.margins(margins.inverse()),
+			Layout.CENTER,
+			Layout.QUANTIZE			
+	);
+
+	
+	public void makeLayout(Layout layout) {
+		Map<Element, Box> boxes = getVertexBoxes(map_element_vertex);
+		
+		UtilsFX.submitTask(
+				() -> layout.at(boxes, map_inputEdges),
+				positions -> setVertexPositions(map_element_vertex, positions)
+		);
 	}
 	
 	
-	private void jiggleOnce(double magnitude) {
-		double dConnection = 40;
-		Vector margin = Vector.xy(20, 20);
-		
-		Map<Vertex, Vector> forces = new HashMap<>();
-		
-		for (Edge edge : edges) {
-			Vertex ni = map_element_vertex.get(edge.input ().element());
-			Vertex no = map_element_vertex.get(edge.output().element());
-			
-			Box bi = UtilsFX.toBox(ni.region());
-			Box bo = UtilsFX.toBox(no.region());
-			
-			Vector ci = Vector.lerp(bi.cornerPP(), bi.cornerPQ(), 0.5);
-			Vector co = Vector.lerp(bo.cornerQP(), bo.cornerQQ(), 0.5);
-			
-			Vector d = ci.sub(co).div(dConnection).sub(Vector.xy(1, 0)).mul(1.0/3);
-			
-			forces.merge(ni, d.inverse(), Vector::add);
-			forces.merge(no, d, Vector::add);
-		}
-		
-		for (Vertex v0 : vertices) {
-			for (Vertex v1 : vertices) {
-				if (v0 == v1) continue;
-				Box b0 = UtilsFX.toBox(v0.region()).grow(margin);
-				Box b1 = UtilsFX.toBox(v1.region()).grow(margin);
-				Vector d = b0.minOffsetToAvoidOverlap(b1).div(margin).mul(3);
-				forces.merge(v0, d, Vector::add);
-			}
-		}
-		
-		for (Vertex v : vertices) {
-			Vector f = forces.get(v);
-			double l = f.lengthSquared();
-			translate(v.region(), f.mul(magnitude / (l + 1)));
-		}
-	}
-    
+	public void centerOnZero() {
+		setTranslate(UtilsFX.box(this).d().div(2));
+	} 
+
 	
 	private void setTranslate(Vector t) {
 		t = t.round();
-		paneVertices.setTranslateX(t.x());
-		paneVertices.setTranslateY(t.y());
-		paneConnections.setTranslateX(t.x());
-		paneConnections.setTranslateY(t.y());
+		UtilsFX.setTranslate(paneVertices, t);
+		UtilsFX.setTranslate(paneConnections, t);
 	}
-	
-	
-	public void centerContentFX() {
-        if (vertices.isEmpty()) return;
-        
-    	Box b = UtilsFX.layoutBox(vertices.getFirst().region());
-		
-        for (Vertex v : vertices) {
-			Box b_ = UtilsFX.layoutBox(v.region());
-			b = Box.bounding(b.cornerPP(), b.cornerQQ(), b_.cornerPP(), b_.cornerQQ());
-        }
-
-		Box g = UtilsFX.layoutBox(this);
-		Vector t = g.c().sub(b.c());
-		setTranslate(t);
-    }
-
 	
 	
 	private void installBackgroundPanning() {
@@ -290,20 +246,6 @@ public class Graph extends Pane {
 	}
 
 	
-
-	
-	private void alignVerticesToPixels() {
-		for (Vertex v : vertices) {
-			UtilsFX.setLayoutP(v.region(), UtilsFX.layoutP(v.region()).round());
-		}
-	}
-
-
-	public static void translate(Node n, Vector o) {
-		UtilsFX.setLayoutP(n, UtilsFX.layoutP(n).add(o));
-	}
-	
-
 	private static boolean isInsideVertex(Object eventTarget) {
 		if (!(eventTarget instanceof Node n)) return false;
 
@@ -332,5 +274,7 @@ public class Graph extends Pane {
 			node.setLayoutY(e.getSceneY() - start[1]);
 		});
 	}	
+	
+	
 	
 }

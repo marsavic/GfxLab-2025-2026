@@ -1,11 +1,14 @@
 package xyz.marsavic.graph;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.Spinner;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
-import xyz.marsavic.gfxlab.gui.UtilsGL;
+import xyz.marsavic.gfxlab.UtilsGL;
 import xyz.marsavic.reactions.elements.Element;
 import xyz.marsavic.reactions.elements.ElementDouble;
 
@@ -20,8 +23,9 @@ public class Vertex_Double extends HBox implements Vertex {
 	public final VertexOutputJack vertexOutputJack;
 	public final List<VertexOutputJack> outputJacks;
 	
-	private final Label label;
-
+	DoubleProperty pMantissa;
+	ReadOnlyObjectProperty<Integer> pExponent;
+	
 	
 	public Vertex_Double(ElementDouble element) {
 		this.element = element;
@@ -30,20 +34,36 @@ public class Vertex_Double extends HBox implements Vertex {
 		getStyleClass().add("vertex-double");
 		
 		vertexOutputJack = new VertexOutputJack(element.out);
-		label = new Label();
+		Label label = new Label();
 		
+		double value = element.out.get();
+		int exponent;
+		double mantissa;
+		if (value != 0.0) {
+			exponent = (int) Math.ceil(Math.log10(Math.abs(value)));
+			mantissa = value / Math.pow(10, exponent);
+		} else {
+			exponent = 0;
+			mantissa = 0;
+		}
+//		System.out.printf("%f = %f * 10^%d\n", value, mantissa, exponent);
 		
-		Double value = element.out.get();
+		Slider slider = new Slider(-1, 1, mantissa);
+		pMantissa = slider.valueProperty();
+		label.textProperty().bind(pMantissa.asString("%.2f"));
+				
+		Spinner<Integer> spinner = new Spinner<>(Integer.MIN_VALUE, Integer.MAX_VALUE, exponent);
+		pExponent = spinner.valueProperty();
 		
-		Slider slider = new Slider(-1, 1, value);
-		updateUI(value);
-		slider.valueProperty().addListener((observable, _oldValue, newValue) -> update(newValue.doubleValue()));
+		slider.valueProperty().addListener((observable, oldValue, newValue) -> update());
+		spinner.valueProperty().addListener((observable, oldValue, newValue) -> update());
 		
 		
 		setAlignment(Pos.CENTER_LEFT);
 		getChildren().addAll(
 				slider,
 				label,
+				spinner,
 				vertexOutputJack
 		);		
 		
@@ -51,13 +71,13 @@ public class Vertex_Double extends HBox implements Vertex {
 		outputJacks = List.of(vertexOutputJack);
 	}
 	
-	private void update(double newValue) {
-		updateUI(newValue);
-		UtilsGL.parallel.submit(() -> element.setResult(newValue));
+	private double value() {
+		return pMantissa.doubleValue() * Math.pow(10, pExponent.getValue());
 	}
 	
-	private void updateUI(double newValue) {
-		label.setText(String.format("%.2f", newValue));
+	private void update() {
+		double v = value();
+		UtilsGL.parallelReactions.submit(() -> element.setResult(v));
 	}
 	
 	@Override public Element element() { return element; }	

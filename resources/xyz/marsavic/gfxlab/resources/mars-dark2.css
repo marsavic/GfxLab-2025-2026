@@ -310,7 +310,6 @@ hsl(220, 13%, 18%)
 .vertex-input-jack,
 .vertex-output-jack
 {
-    
     -fx-min-width: 13;
     -fx-max-width: 13;
     -fx-pref-width: 13;
@@ -323,4 +322,10 @@ hsl(220, 13%, 18%)
     -fx-background-radius: 50%;
 
     -fx-background-color: hsba(240, 40%, 75%, 0.5);
+}
+
+.vertex-double > .spinner
+{
+    /*-fx-text-alignment: right;*/
+    -fx-max-width: 60;
 }

@@ -3,9 +3,10 @@ package xyz.marsavic.graph;
 import javafx.animation.AnimationTimer;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.*;
 import org.kordamp.ikonli.javafx.FontIcon;
 import xyz.marsavic.functions.A1;
@@ -18,6 +19,8 @@ import xyz.marsavic.reactions.Dispatcher;
 import xyz.marsavic.reactions.Event;
 import xyz.marsavic.reactions.Reactions;
 import xyz.marsavic.reactions.values.EventInvalidated;
+import xyz.marsavic.resources.BorrowManagerMap;
+import xyz.marsavic.resources.Rr;
 import xyz.marsavic.time.Profiler;
 import xyz.marsavic.utils.Loop;
 import xyz.marsavic.utils.Utils;
@@ -29,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 @SuppressWarnings("FieldCanBeLocal")
-public class Vertex_AnimationSink extends VBox implements Vertex {
+public class Vertex_AnimationSink_Image extends VBox implements Vertex {
 	
 	public final ElementAnimationSink element;
 
@@ -37,7 +40,7 @@ public class Vertex_AnimationSink extends VBox implements Vertex {
 	public final VertexInputJack vertexInputJack;
 	public final List<VertexInputJack> inputJacks;
 
-	private final Canvas canvas;
+	private final ImageView imageView;
 	private final CheckBox chbEnabled;
 	private final Spinner<Integer> spnIFrame;
 	private final Button btnCopyToClipboard;
@@ -49,7 +52,7 @@ public class Vertex_AnimationSink extends VBox implements Vertex {
 	final A1<EventInvalidated> onInvalidated = this::invalidated;
 
 	
-	public Vertex_AnimationSink(ElementAnimationSink element) {
+	public Vertex_AnimationSink_Image(ElementAnimationSink element) {
 		this.element = element;
 	
 		getStyleClass().add("vertex");
@@ -68,7 +71,7 @@ public class Vertex_AnimationSink extends VBox implements Vertex {
 
 		// ------
 		
-		canvas = new Canvas();
+		imageView = new ImageView();
 		chbEnabled = new CheckBox();
 		chbEnabled.setSelected(true);
 		spnIFrame = new Spinner<>();
@@ -104,7 +107,7 @@ public class Vertex_AnimationSink extends VBox implements Vertex {
 		getChildren().addAll(
 				hBox,
 				controlPanel,
-				canvas
+				imageView
 		);
 		
 		inputJacks = List.of(vertexInputJack);
@@ -158,8 +161,12 @@ public class Vertex_AnimationSink extends VBox implements Vertex {
 	
 
 	private final Profiler profilerGetFrame = UtilsGL.profiler(this, "get frame");
+	private final BorrowManagerMap<WritableImage, Vector> images = new BorrowManagerMap<>(UtilsFX::createWritableImage, null);
 	
 	private Vector size2old = Vector.ZERO;
+	
+//	private final FB_O<Profiler> profilerSelector = p ->  p.name().matches(".*add sample.*");
+//	private final Comparator<Profiler> profilerComparator = Comparator.comparing(Profiler::lastEventAgo);
 	
 	final AtomicBoolean updating = new AtomicBoolean(false);
 	
@@ -178,23 +185,25 @@ public class Vertex_AnimationSink extends VBox implements Vertex {
 				},
 				rMI -> {
 					rMI.a(mI -> {
-						Vector size = mI.size();
-						if (!Objects.equals(size, size2old)) {
-							size2old = size;
-							canvas.setWidth(size.x());
-							canvas.setHeight(size.y());
-							fireResized();
-						}
-						UtilsFX.writeArray2ToCanvas(canvas, mI);
+						Rr<WritableImage> rImage = images.obtain(mI.size(), true);
+						rImage.a(image -> UtilsFX.writeArray2ToImage(image, mI));
+						rImage.a(imageView::setImage);
+						rImage.release();
 					});
 					rMI.release();
+//					lblInfo.setText(String.format("%.1f", profilerGetFrame.eventsPerSecond()));
+					Vector size2new = UtilsFX.imageSize(imageView.getImage());
+					if (!Objects.equals(size2new, size2old)) {
+						size2old = size2new;
+						fireResized();
+					}
 				}
 		);
 	}
 
 
 	private Image image() {
-		return canvas.snapshot(null, null);
+		return imageView.getImage();
 	}
 	
 	

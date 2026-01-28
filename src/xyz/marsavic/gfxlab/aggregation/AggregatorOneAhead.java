@@ -4,11 +4,10 @@ import xyz.marsavic.gfxlab.Color;
 import xyz.marsavic.gfxlab.ColorFunction3;
 import xyz.marsavic.gfxlab.Matrix;
 import xyz.marsavic.gfxlab.Vec3;
-import xyz.marsavic.gfxlab.gui.UtilsGL;
+import xyz.marsavic.gfxlab.UtilsGL;
 import xyz.marsavic.resources.Rr;
 import xyz.marsavic.utils.Hash;
 import xyz.marsavic.utils.Parallel;
-import xyz.marsavic.utils.Utils;
 
 import java.util.concurrent.Future;
 
@@ -28,7 +27,7 @@ public class AggregatorOneAhead extends Aggregator {
 	
 	
 	private void startGettingAhead(int iFrame) {
-		frFrameAhead = UtilsGL.parallel.submit(() -> rFrameCompute(iFrame));
+		frFrameAhead = UtilsGL.parallelReactions.submit(() -> rFrameCompute(iFrame));
 	}
 	
 	
@@ -59,7 +58,7 @@ public class AggregatorOneAhead extends Aggregator {
 	
 	private void releaseRFrameAhead() {
 		var frFrame_ = frFrameAhead;
-		UtilsGL.parallel.submit(() -> Parallel.futureGet(frFrame_).release());
+		UtilsGL.parallelReactions.submit(() -> Parallel.futureGet(frFrame_).release());
 	}
 	
 	

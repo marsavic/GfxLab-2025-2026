@@ -1,15 +1,14 @@
-package xyz.marsavic.gfxlab.gui;
+package xyz.marsavic.gfxlab.entry_points;
 
+import xyz.marsavic.gfxlab.UtilsGL;
 import xyz.marsavic.time.Profiler;
 import xyz.marsavic.time.Timer;
-import xyz.marsavic.tuples.T2;
 
 import javax.management.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.management.OperatingSystemMXBean;
-import java.util.Comparator;
 
 
 public class Profiling {
@@ -77,12 +76,20 @@ public class Profiling {
 	public static String infoTextProfilers() {
 		StringBuilder sb = new StringBuilder();
 		
+/*
 		// Profilers change, can't sort them while running, so...
 		UtilsGL.profilers().stream()
 				.map(p -> new T2<>(p, p.durationPerSecond()))
 				.sorted(Comparator.comparingDouble(t -> -t.p1()))
 				.forEach(t -> {
 					sb.append(t.p0().toStringAggregateName());
+					sb.append("\n");
+				});
+*/
+
+		UtilsGL.profilers()
+				.forEach(p -> {
+					sb.append(p.toStringAggregateName());
 					sb.append("\n");
 				});
 		

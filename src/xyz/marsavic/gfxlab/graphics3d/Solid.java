@@ -1,6 +1,9 @@
 package xyz.marsavic.gfxlab.graphics3d;
 
 
+import xyz.marsavic.gfxlab.Affine3;
+import xyz.marsavic.gfxlab.graphics3d.solids.Transformed;
+
 public interface Solid {
 	
 	/**
@@ -28,4 +31,8 @@ public interface Solid {
 		return t < beforeTime;
 	}
 	
+	
+	default Solid transformed(Affine3 t) {
+		return new Transformed(this, t);
+	}
 }

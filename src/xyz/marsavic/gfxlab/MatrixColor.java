@@ -1,7 +1,6 @@
 package xyz.marsavic.gfxlab;
 
 import xyz.marsavic.geometry.Vector;
-import xyz.marsavic.gfxlab.gui.UtilsGL;
 
 
 public class MatrixColor implements Matrix<Color> {

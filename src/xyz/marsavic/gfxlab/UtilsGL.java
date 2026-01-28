@@ -1,10 +1,7 @@
-package xyz.marsavic.gfxlab.gui;
+package xyz.marsavic.gfxlab;
 
+import xyz.marsavic.functions.FB_O;
 import xyz.marsavic.geometry.Vector;
-import xyz.marsavic.gfxlab.Color;
-import xyz.marsavic.gfxlab.Matrix;
-import xyz.marsavic.gfxlab.MatrixColor;
-import xyz.marsavic.gfxlab.MatrixInts;
 import xyz.marsavic.resources.BorrowManagerMap;
 import xyz.marsavic.time.Profiler;
 import xyz.marsavic.utils.Parallel;
@@ -48,15 +45,22 @@ final public class UtilsGL {
 		}
 	}
 	
-
+	public static Profiler profiler(FB_O<? super Profiler> filter, Comparator<? super Profiler> comparator) {
+		return profilers.stream()
+				.filter(filter::at).min(comparator)
+				.orElseThrow();
+	}
+	
+	
 	// ==================================================================================
 	
 	
 	public static final int parallelism;	
 	
 	static {
+		int p = Runtime.getRuntime().availableProcessors();
 //		int p = ForkJoinPool.getCommonPoolParallelism() + 1;
-		int p = (ForkJoinPool.getCommonPoolParallelism() + 1) * 3 / 4;
+		p = p * 3 / 4;
 //		p = 1;
 /*
 		try {
@@ -75,6 +79,7 @@ final public class UtilsGL {
 	}
 	
 	public static final Parallel parallel = new Parallel(new ForkJoinPool(parallelism));
+	public static final Parallel parallelReactions = new Parallel(new ForkJoinPool(parallelism));
 	
 	
 	// ==================================================================================

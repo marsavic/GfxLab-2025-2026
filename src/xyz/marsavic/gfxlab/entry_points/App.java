@@ -1,33 +1,36 @@
-package xyz.marsavic.gfxlab.gui;
+package xyz.marsavic.gfxlab.entry_points;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.*;
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.Priority;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import xyz.marsavic.functions.A0;
 import xyz.marsavic.functions.A1;
+import xyz.marsavic.geometry.Vector;
 import xyz.marsavic.gfxlab.ElementAnimationSink;
+import xyz.marsavic.gfxlab.playground.GfxLab;
+import xyz.marsavic.gfxlab.resources.Resources;
 import xyz.marsavic.graph.Graph;
 import xyz.marsavic.graph.Vertex;
 import xyz.marsavic.graph.VertexInputJack;
-import xyz.marsavic.gfxlab.playground.GfxLab;
-import xyz.marsavic.gfxlab.resources.Resources;
-import xyz.marsavic.graph.Vertex_AnimationSink;
+import xyz.marsavic.graph.Vertex_AnimationSink_Image;
 import xyz.marsavic.javafx.UtilsFX;
 import xyz.marsavic.reactions.elements.Element;
+import xyz.marsavic.utils.FileWatcher;
+
+import java.io.IOException;
+import java.nio.file.Paths;
 
 
 public class App extends Application {
 
 	static {
-		System.setProperty("prism.forceGPU=true", "true");
+		System.setProperty("prism.forceGPU", "true");
 //		System.setProperty("javafx.animation.fullspeed", "true");
 //		System.setProperty("javafx.animation.pulse", "60");
 //		System.setProperty("prism.vsync", "true");
@@ -40,17 +43,23 @@ public class App extends Application {
 	Region info;
 	TextArea textArea;
 	
+	static final String cssFilePath = "resources/xyz/marsavic/gfxlab/resources/mars-dark2.css";
 	
 	
-	AnimationTimer animationTimer = new AnimationTimer() {
-		int i = 0;
+	AnimationTimer animationTimerProfiling = new AnimationTimer() {
+		long timeLast = Long.MIN_VALUE;
+		boolean firstTime = true;
+		
 		@Override
-		public void handle(long now) {
-			textArea.setText(Profiling.infoTextSystem() + Profiling.infoTextProfilers());
-			i++;
-			if ((i % 20) == 0) {				
-				primaryStage.getScene().getStylesheets().setAll("file:resources/xyz/marsavic/gfxlab/resources/mars-dark2.css");
+		public void handle(long timeNow) {
+			long timePassed = timeNow - timeLast;
+			if (!firstTime && timePassed < 1_000_000_000 / 20) {
+				return;
 			}
+			firstTime = false;
+			timeLast = timeNow;
+			
+			textArea.setText(Profiling.infoTextSystem() + Profiling.infoTextProfilers());
 		}
 	};
 	
@@ -76,7 +85,7 @@ public class App extends Application {
 		
 		// Adding onResized for animation sinks 
 		for (Vertex v : graph.vertices) {
-			if (v instanceof Vertex_AnimationSink vas) {
+			if (v instanceof Vertex_AnimationSink_Image vas) {
 				vas.onResized().add(onResized);
 			}
 		}
@@ -109,7 +118,8 @@ public class App extends Application {
 		
 		textArea.setMouseTransparent(true);
 		
-		Scene scene = new Scene(root, 1840, 1000);
+		Vector sceneSize = UtilsFX.getScreenBox().x().d() < 2400 ? Vector.xy(1840, 1000) : Vector.xy(2400, 1200);
+		Scene scene = new Scene(root, sceneSize.x(), sceneSize.y());
 		
 		
 		scene.getStylesheets().setAll(Resources.stylesheetURL);
@@ -120,10 +130,11 @@ public class App extends Application {
 		primaryStage.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
 			A0 action = switch (event.getCode()) {
 				case ESCAPE -> Platform::exit;
-				case F1  -> this::autoPosition;
-				case F2  -> () -> graph.jiggle();
-				case F3  -> () -> graph.layItOutFX();
-				case F4  -> this::toggleInfo;
+				case F1  -> () -> graph.makeLayout(Graph.layout1);
+				case F2  -> () -> graph.makeLayout(Graph.layout2);
+				case F3  -> () -> graph.makeLayout(Graph.layout3);
+				case F8  -> System::gc;
+				case F9  -> this::toggleInfo;
 				case F11 -> () -> primaryStage.setFullScreen(!primaryStage.isFullScreen());
 				default -> A0.NOOP;
 			};
@@ -134,35 +145,51 @@ public class App extends Application {
 		primaryStage.setScene(scene);
 		primaryStage.show();
 		
-//		Platform.runLater(this::autoPosition);
+		Platform.runLater(() -> {
+			graph.makeLayout(Graph.layout1);
+			graph.centerOnZero();
+		});
 		
+		animationTimerProfiling.start();
 		
-//		System.err.println("Using animation timer for CSS auto reload. Remember to remove");
-		animationTimer.start();		
+		try {
+			//noinspection resource
+			FileWatcher.watchFile(Paths.get(cssFilePath), this::reloadCSS);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
+	private void reloadCSS() {
+		Platform.runLater(() -> {
+			primaryStage.getScene().getStylesheets().setAll("file:" + cssFilePath);
+		});
+	}
 	
 	private void toggleInfo() {
 		UtilsFX.toggle(root, info);
 	}
 	
 	
-	private void autoPosition() {
-		graph.layItOutFX();
-		graph.jiggle();
+	private void makeLayout() {
+		graph.makeLayout(Graph.layout1);
 	}
 	
 	
-	private final A1<Vertex_AnimationSink.EventResized> onResized = this::onResized;
+	private final A1<Vertex_AnimationSink_Image.EventResized> onResized = this::onResized;
 	
-	private void onResized(Vertex_AnimationSink.EventResized eventResized) {
-		Platform.runLater(this::autoPosition);
+	private void onResized(Vertex_AnimationSink_Image.EventResized eventResized) {
+		Platform.runLater(this::makeLayout);
 	}
 	
 	
-	static void main() {
+	public static void main() {
 		launch();
 	}
 	
+	
+	@Override
+	public void stop() {
+	}	
 	
 }

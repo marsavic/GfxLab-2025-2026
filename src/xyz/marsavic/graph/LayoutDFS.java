@@ -9,52 +9,55 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-class LayoutDFS {
-	private static final Vector margin = Vector.xy(30, 10);
+
+public final class LayoutDFS implements Layout {
+
+	public static LayoutDFS INSTANCE = new LayoutDFS();
+	private LayoutDFS() {}
+	
 	
 	private static class Data {
 		Box box;
+		List<Edge> edges;
 		Vector sizeSubtree, sizeChildrenSubtrees;
 	}
 	
 	
-	private final Map<Element, List<Edge>> map_inputEdges;
-	private final Map<Element, Data> map_data = new HashMap<>();
-	
-	public final Map<Element, Box> result;
-	
-	
-	public LayoutDFS(Map<Element, Box> boxes, Map<Element, List<Edge>> map_inputEdges) {
-		this.map_inputEdges = map_inputEdges;
+	@Override
+	public Map<Element, Box> at(Map<Element, Box> boxes, Map<Element, List<Edge>> map_inputEdges) {
+		Map<Element, Data> map_data = new HashMap<>();
 		
 		for (Map.Entry<Element, Box> entry : boxes.entrySet()) {
 			Element e = entry.getKey();
 			Data data = new Data();
-			data.box = entry.getValue().extend(margin);
+			data.edges = map_inputEdges.get(e);
+			data.box = entry.getValue();
 			map_data.put(e, data);
 		}
 		
 		for (Element e : map_data.keySet()) {
 			if (e.outputs().isEmpty()) {
-				dfs0(e);
-				dfs1(e);
+				dfs0(map_data, e);
+				dfs1(map_data, e);
 			}
 		}
 		
-		result = map_data.entrySet().stream().collect(Collectors.toMap(
+		return map_data.entrySet().stream().collect(Collectors.toMap(
 				Map.Entry::getKey,
-				e -> e.getValue().box.extend(margin.inverse())
+				e -> e.getValue().box
 		));
 	}
 	
 	
-	private void dfs0(Element e) {
+	private static void dfs0(Map<Element, Data> map_data, Element e) {
+		Data data = map_data.get(e);
+		
 		double w = 0;
 		double h = 0;
 		
-		for (Edge edge : map_inputEdges.get(e)) {
+		for (Edge edge : data.edges) {
 			Element eChild = edge.output().element();
-			dfs0(eChild);
+			dfs0(map_data, eChild);
 			Data dataChild = map_data.get(eChild);
 			Vector dSubtree = dataChild.sizeSubtree;
 			w = Math.max(w, dSubtree.x());
@@ -65,17 +68,17 @@ class LayoutDFS {
 		dataMe.sizeChildrenSubtrees = Vector.xy(w, h);
 		w += dataMe.box.d().x();
 		h = Math.max(h, dataMe.box.d().y());
-		dataMe.sizeSubtree = Vector.xy(w, h).add(margin);
+		dataMe.sizeSubtree = Vector.xy(w, h);
 	}
 	
 	
-	private void dfs1(Element e) {
-		Data dataV = map_data.get(e);
+	private static void dfs1(Map<Element, Data> map_data, Element e) {
+		Data data = map_data.get(e);
 		
-		double x = dataV.box.x().p();
-		double y = dataV.box.y().c() - dataV.sizeChildrenSubtrees.y() / 2;
+		double x = data.box.x().p();
+		double y = data.box.y().c() - data.sizeChildrenSubtrees.y() / 2;
 		
-		for (Edge edge : map_inputEdges.get(e)) {
+		for (Edge edge : data.edges) {
 			Element eChild = edge.output().element();
 			Data dataChild = map_data.get(eChild);
 			
@@ -86,7 +89,7 @@ class LayoutDFS {
 					dataChild.box.d()
 			);
 			y += dataChild.sizeSubtree.y();
-			dfs1(eChild);
+			dfs1(map_data, eChild);
 		}
 	}
 	

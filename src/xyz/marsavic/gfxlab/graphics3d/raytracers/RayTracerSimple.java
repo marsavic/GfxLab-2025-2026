@@ -73,10 +73,15 @@ public class RayTracerSimple extends RayTracer {
 				Color.BLACK :
 				sample(scene, Ray.pd(p, r_), depthRemaining - 1);
 		
+		Color lightRefractive = material.refractive().zero() ? 
+				Color.BLACK :
+				sample(scene, Ray.pd(p, GeometryUtils.refractedNN(n_, i_, material.refractiveIndex())), depthRemaining - 1);
+		
 		Color result = Color.BLACK;
 		result = result.add(lightDiffuse   .mul(material.diffuse   ()));
 		result = result.add(lightSpecular  .mul(material.specular  ()));
 		result = result.add(lightReflective.mul(material.reflective()));
+		result = result.add(lightRefractive.mul(material.refractive()));
 		
 		return result;
 	}

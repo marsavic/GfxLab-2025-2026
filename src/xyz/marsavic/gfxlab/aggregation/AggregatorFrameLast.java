@@ -1,16 +1,14 @@
 package xyz.marsavic.gfxlab.aggregation;
 
-import xyz.marsavic.functions.A0;
 import xyz.marsavic.gfxlab.Color;
 import xyz.marsavic.gfxlab.ColorFunction3;
 import xyz.marsavic.gfxlab.Matrix;
 import xyz.marsavic.gfxlab.Vec3;
-import xyz.marsavic.gfxlab.gui.UtilsGL;
+import xyz.marsavic.gfxlab.UtilsGL;
 import xyz.marsavic.resources.Rr;
 import xyz.marsavic.time.Profiler;
 import xyz.marsavic.utils.Hash;
-import xyz.marsavic.utils.OnGC;
-import xyz.marsavic.utils.Parallel;
+import xyz.marsavic.utils.Loop;
 
 
 public class AggregatorFrameLast extends Aggregator {
@@ -19,7 +17,7 @@ public class AggregatorFrameLast extends Aggregator {
 	
 	private IFrameAggregate iFrameAggregateLast = null; // Must not be changed outside synchronized blocks.
 	private final Profiler profilerLoop = UtilsGL.profiler(this, "add sample");
-	private final A0 aStopLoop;
+	private final Loop loop;
 	
 	
 	
@@ -28,8 +26,8 @@ public class AggregatorFrameLast extends Aggregator {
 		
 		changeActiveAggregate(0);
 		
-		aStopLoop = Parallel.daemonLoop(this::addSample);
-		OnGC.setOnGC(this, aStopLoop);
+		loop = new Loop(this::addSample, this::loopFinalize);
+//		OnGC.setOnGC(this, () -> loop.demand(Loop.State.STOPPED));
 	}
 	
 	
@@ -61,15 +59,17 @@ public class AggregatorFrameLast extends Aggregator {
 	private void addSample() {
 		profilerLoop.measure(() -> {
 			iFrameAggregateLast.aggregate.addSample();
-			fireInvalidated(); // TODO Fire EventInvalidatedFrame instead
 		});
+		fireInvalidatedAsync(UtilsGL.parallelReactions.executorService()); // TODO Fire EventInvalidatedFrame instead
 	}
-	
-	
+
+	private void loopFinalize() {
+		iFrameAggregateLast.aggregate.release();
+	}
+		
 	
 	@Override
 	public synchronized void release() {
-		aStopLoop.at();
-		iFrameAggregateLast.aggregate.release();
+		loop.demand(Loop.State.STOPPED);
 	}
 }
