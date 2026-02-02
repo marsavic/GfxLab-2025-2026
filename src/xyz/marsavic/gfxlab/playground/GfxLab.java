@@ -25,8 +25,13 @@ public class GfxLab {
 //				RefractionTest
 //				TransformationsTest
 //				CSGTest
-				GoldTrinket
+//				GoldTrinket
 //				NewYearsParty
+		
+				GITest
+//				Oven
+//				Oranges2
+//				CityOfNight
 		.setup();
 	}
 	
