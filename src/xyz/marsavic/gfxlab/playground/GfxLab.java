@@ -28,10 +28,12 @@ public class GfxLab {
 //				GoldTrinket
 //				NewYearsParty
 		
-				GITest
+//				GITest
 //				Oven
 //				Oranges2
 //				CityOfNight
+		
+				SDFTest
 		.setup();
 	}
 	
